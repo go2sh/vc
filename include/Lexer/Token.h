@@ -1,4 +1,4 @@
-
+#include "Common/TokenKinds.h"
 
 class Token {
     TokenKind kind;
@@ -6,4 +6,4 @@ class Token {
   public:
     TokenKind getTokenKind() { return kind; }
     void setTokenKind(TokenKind k) { kind = k; }
-}
+};

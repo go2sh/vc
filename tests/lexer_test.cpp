@@ -1,4 +1,4 @@
-#include <lexer/lexer.h>
+#include "Lexer/Lexer.h"
 
 int main(int argc, char ** argv) {
     

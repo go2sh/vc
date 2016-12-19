@@ -2,9 +2,10 @@
 #define TOK(X)
 #endif
 #ifndef KEYWORD
-#define KEYWORD(X, Y) TOK(kw_ ## x)
+#define KEYWORD(X, Y) TOK(kw_ ## X)
+#endif
 #ifndef DELIMITER
-#define DELIMITER(X, Y) TOK(x)
+#define DELIMITER(X, Y) TOK(X)
 #endif
 
 

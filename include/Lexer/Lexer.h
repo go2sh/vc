@@ -1,4 +1,5 @@
 #include "Token.h"
+#include "Common/TokenKinds.h"
 
 class Lexer {
 
@@ -18,4 +19,4 @@ public:
 
 private:
   bool lexStringLiteral(Token &token);
-}
+};
