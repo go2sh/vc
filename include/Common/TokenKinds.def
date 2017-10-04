@@ -8,6 +8,7 @@
 #define DELIMITER(X, Y) TOK(X)
 #endif
 
+TOK(unknown)
 
 TOK(basic_indetifier) // 15.4.2
 TOK(extended_indentifier) // 15.4.3
