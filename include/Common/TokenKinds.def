@@ -9,9 +9,10 @@
 #endif
 
 TOK(unknown)
+TOK(eof)
 
-TOK(basic_indetifier) // 15.4.2
-TOK(extended_indentifier) // 15.4.3
+TOK(basic_identifier) // 15.4.2
+TOK(extended_identifier) // 15.4.3
 TOK(decimal_literal) //15.5.2
 TOK(based_literal) //15.5.3
 TOK(character_literal) //15.6
@@ -176,3 +177,7 @@ KEYWORD(while, VHDLALL)
 KEYWORD(with, VHDLALL)
 KEYWORD(xnor, VHDLALL)
 KEYWORD(xor, VHDLALL)
+
+#undef TOK
+#undef KEYWORD
+#undef DELIMITER

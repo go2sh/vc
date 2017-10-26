@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <Common/TokenKinds.h>
 #include <Lexer/Lexer.h>
 
 using namespace vc;
@@ -17,9 +18,11 @@ int main(int argc, char ** argv) {
     
     Lexer lexer((char*)data, st.st_size);
     Token t;
-    lexer.Lex(t);
+    while (t.getTokenKind() != tok::eof) {
+        lexer.Lex(t);
+        printf("Token: %s\n", tok::getTokenName(t.getTokenKind()));
+    }
     
-    printf("Token: %d", t.getTokenKind());
     close(fd);
     return 0;
 }

@@ -28,18 +28,18 @@ public:
   void Lex(Token &Result);
 
 private:
-  void lexIdentifier(Token &Result);
+  void lexIdentifier(Token &Result, const char *CurrentPtr);
   void lexExtendedIdentifier(Token &Result);
 
   void lexStringLiteral(Token &Result);
-  void lexCharacterLiteral(Token &Result);
+  void lexCharacterLiteral(Token &Result, const char *CurrentPtr);
 
-  void lexNumber(Token &Result);
-  void lexDecimalLiteral(Token &Result);
-  void lexBasedLiteral(Token &Result);
-  void lexBitStringLiteral(Token &Result);
+  void lexNumber(Token &Result, const char *CurrentPtr);
+  void lexDecimalLiteral(Token &Result, const char *CurrentPtr);
+  void lexBasedLiteral(Token &Result, const char *CurrentPtr);
+  void lexBitStringLiteral(Token &Result, const char *CurrentPtr);
 
-  void LexCompoundDelimiter(Token &Result);
+  void LexCompoundDelimiter(Token &Result, const char *CurrentPtr);
 
   void lexSingleLineComment(Token &Result);
   void lexMultiLineComment(Token &Result);
@@ -49,6 +49,12 @@ private:
   void SkipWhitespace(const char *CurrentPtr);
 
   void FormToken(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
+    Result.setTokenKind(Kind);
+    Result.setValue(BufferPtr, TokenEnd - BufferPtr);
+    BufferPtr = TokenEnd;
+  }
+
+  void FormTokenWithValue(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
     Result.setTokenKind(Kind);
     Result.setValue(BufferPtr, TokenEnd - BufferPtr);
     BufferPtr = TokenEnd;
