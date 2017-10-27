@@ -89,6 +89,14 @@ LexToken:
   tok::TokenKind Kind = tok::unknown;
 
   switch (Char) {
+  case 0:
+    if (CurrentPtr - 1 != BufferEnd) {
+      //
+      goto LexToken;
+    }
+    CurrentPtr--;
+    FormToken(Result, tok::eof);
+    return;
   case ' ':
   case (char)0xA0: // NBSP
   case '\t':
@@ -101,7 +109,7 @@ LexToken:
     if (*CurrentPtr == '\n') {
       Char = *(CurrentPtr++);
     }
-    [[fallthrough]];
+  //[[fallthrough]];
   case '\n':
     hasWhitespacePrefix = false;
     isAtNewline = true;
@@ -187,7 +195,7 @@ LexToken:
   case 'D':
     Char = *CurrentPtr;
     if (Char == '"') {
-      //We use the BufferPtr to get in sync with a preceeding length
+      // We use the BufferPtr to get in sync with a preceeding length
       lexBitStringLiteral(Result, BufferPtr);
       return;
     }
@@ -203,8 +211,8 @@ LexToken:
     if ((Char == 'B' || Char == 'b' || Char == 'X' || Char == 'x' ||
          Char == 'O' || Char == 'o') &&
         *(CurrentPtr + 1) == '"') {
-      //Get in sync with preeciding length
-      lexBitStringLiteral(Result,BufferPtr);
+      // Get in sync with preeciding length
+      lexBitStringLiteral(Result, BufferPtr);
       return;
     }
     lexIdentifier(Result, CurrentPtr);
@@ -334,7 +342,7 @@ void Lexer::lexCharacterLiteral(Token &Result, const char *CurrentPtr) {
     return;
   }
   CurrentPtr += 2;
-  FormToken(Result,tok::character_literal,CurrentPtr);
+  FormToken(Result, tok::character_literal, CurrentPtr);
 }
 
 void Lexer::lexStringLiteral(Token &Result) {
@@ -358,10 +366,10 @@ void Lexer::lexStringLiteral(Token &Result) {
   }
 }
 
-void Lexer::lexNumber(Token &Result,const char *CurrentPtr) { 
+void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
   bool wasUnderline = false;
 
-  //Consume base or integer
+  // Consume base or integer
   while (IsNumericUnderline(*CurrentPtr)) {
     if (wasUnderline && *CurrentPtr == '_') {
       cout << "Error: Consecutive underline not allowed." << endl;
@@ -372,7 +380,7 @@ void Lexer::lexNumber(Token &Result,const char *CurrentPtr) {
 
   // Check for based literal
   if (*CurrentPtr == '#') {
-    lexBasedLiteral(Result,CurrentPtr++);
+    lexBasedLiteral(Result, CurrentPtr++);
     return;
   }
 
@@ -383,11 +391,12 @@ void Lexer::lexNumber(Token &Result,const char *CurrentPtr) {
 
   if (IsBitStringModifier(*CurrentPtr)) {
     // We have a bit string literal
-    if (*CurrentPtr == 's' || *CurrentPtr == 'S' || *CurrentPtr == 'u' || *CurrentPtr == 'U') {
+    if (*CurrentPtr == 's' || *CurrentPtr == 'S' || *CurrentPtr == 'u' ||
+        *CurrentPtr == 'U') {
       if (IsBitStringBase(*(++CurrentPtr))) {
         lexBitStringLiteral(Result, CurrentPtr++);
       } else {
-        std::cout << "Unexspected character." << endl;  
+        std::cout << "Unexspected character." << endl;
       }
     } else if (IsBitStringBase(*CurrentPtr)) {
       lexBitStringLiteral(Result, CurrentPtr++);
@@ -397,12 +406,13 @@ void Lexer::lexNumber(Token &Result,const char *CurrentPtr) {
     return;
   } else if (!IsLetter(*CurrentPtr)) {
     // Every other character then a letter terminates the decimal literal
-    FormToken(Result,tok::decimal_literal,CurrentPtr);
+    FormToken(Result, tok::decimal_literal, CurrentPtr);
   } else {
-    //seperator between literals and identifier
-    std::cout << "Need seperator between identifier and decimal literal." << endl;
+    // seperator between literals and identifier
+    std::cout << "Need seperator between identifier and decimal literal."
+              << endl;
   }
- }
+}
 
 void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
   bool wasUnderline = false;
@@ -421,7 +431,7 @@ void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
   // Check for exponent
   if (*CurrentPtr == 'e' || *CurrentPtr == 'E') {
     CurrentPtr++;
-    //Check for sign
+    // Check for sign
     if (*CurrentPtr == '-' || *CurrentPtr == '+') {
       CurrentPtr++;
     }
@@ -436,12 +446,10 @@ void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
       CurrentPtr++;
     }
   }
-  FormToken(Result,tok::decimal_literal,CurrentPtr);
- }
+  FormToken(Result, tok::decimal_literal, CurrentPtr);
+}
 void Lexer::lexBasedLiteral(Token &Result, const char *CurrentPtr) { return; }
-void Lexer::lexBitStringLiteral(Token &Result, const char *CurrentPtr) { 
-  
- }
+void Lexer::lexBitStringLiteral(Token &Result, const char *CurrentPtr) {}
 
 void Lexer::LexCompoundDelimiter(Token &Result, const char *CurrentPtr) {
 #define TwoByteCompound(b1, b2, t1, t2)                                        \
