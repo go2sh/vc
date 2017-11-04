@@ -8,6 +8,10 @@ enum TokenKind : unsigned short {
 #include "Common/TokenKinds.def"
   NUM_TOKENS
 };
+
+const char *getTokenName(TokenKind Kind);
+const char *getKeywordSpelling(TokenKind Kind);
+
 } // namespace tok
 } // namespace vc
 
