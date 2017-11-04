@@ -50,7 +50,6 @@ private:
 
   void FormToken(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
     Result.setTokenKind(Kind);
-    Result.setValue(BufferPtr, TokenEnd - BufferPtr);
     BufferPtr = TokenEnd;
   }
 

@@ -89,6 +89,9 @@ LexToken:
   tok::TokenKind Kind = tok::unknown;
 
   switch (Char) {
+  case '\0':
+    FormToken(Result,tok::eof, CurrentPtr);
+    return;
   case ' ':
   case (char)0xA0: // NBSP
   case '\t':
