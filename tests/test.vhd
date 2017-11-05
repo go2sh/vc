@@ -6,7 +6,7 @@ entity test is
 end entity;
 
 architecture beh of test is
-	
+
 signal clk : std_logic;
 
 signal a : std_logic;

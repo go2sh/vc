@@ -1,6 +1,7 @@
 add_library(vc
     Common/CharInfo.cpp
     Common/TokenKinds.cpp
-    Lexer/Token.cpp
-    Lexer/Lexer.cpp
+    Parse/Token.cpp
+    Parse/Lexer.cpp
+    Parse/Parser.cpp
 )

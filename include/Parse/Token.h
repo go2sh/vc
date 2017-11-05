@@ -1,24 +1,33 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include "Common/TokenKinds.h"
 #include <string>
-
 #include <sys/types.h>
 
 using namespace std;
 
-#include <Common/TokenKinds.h>
-
 namespace vc {
 class Token {
-  tok::TokenKind kind;
-  string value;
+  tok::TokenKind Kind;
+  string Value;
+  const char *Location;
 
 public:
-  tok::TokenKind getTokenKind() { return kind; }
-  void setTokenKind(tok::TokenKind k) { kind = k; }
-  string getValue() { return value; }
-  void setValue(const char *buf, size_t len) { value = string(buf, len); }
+  Token() : Kind(tok::NUM_TOKENS) {};
+
+  tok::TokenKind getKind() { return Kind; }
+  void setKind(tok::TokenKind K) { Kind = K; }
+  string getValue() { return Value; };
+  void setValue(std::string & S) { Value = S; };
+  void setValue(const char *buf, size_t len) { Value = string(buf, len); }
+  const char *getLocation() { return Location; };
+  void setLocation(const char *Loc) { Location = Loc; };
+
+  bool is(tok::TokenKind K) { return Kind == K; }
+
+  bool isNot(tok::TokenKind K) { return Kind != K; }
+  bool isNot(tok::TokenKind K1,tok::TokenKind K2) { return Kind != K1 && Kind != K2;}
 };
 
 } // namespace vc

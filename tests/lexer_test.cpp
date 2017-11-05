@@ -4,7 +4,8 @@
 
 
 #include "Common/TokenKinds.h"
-#include "Lexer/Lexer.h"
+#include "Parse/Lexer.h"
+#include "Parse/Parser.h"
 
 using namespace vc;
 
@@ -18,10 +19,8 @@ int main(int argc, char ** argv) {
     contents[contents.size()-1] = 0;
     in.close();
     Lexer lexer(contents.data(), contents.size()-1);
-    Token t;
-    while (t.getTokenKind() != tok::eof) {
-        lexer.Lex(t);
-        std::cout << "Token: " << tok::getTokenName(t.getTokenKind()) << " Value: " << t.getValue() << std::endl;
-    }
+    Parser P(&lexer);
+    P.parseDesignFile();
+    
     return 0;
 }

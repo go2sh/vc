@@ -1,9 +1,10 @@
 #ifndef LEXER_H
 #define LEXER_H
+
 #include <stdint.h>
 
-#include <Common/TokenKinds.h>
-#include <Lexer/Token.h>
+#include "Common/TokenKinds.h"
+#include "Parse/Token.h"
 
 namespace vc {
 
@@ -25,13 +26,17 @@ class Lexer {
 public:
   Lexer(const char *inputBuffer, int length);
 
-  void Lex(Token &Result);
+  void lex(Token &Result);
+
+  void restoreToken(Token &T) {
+    BufferPtr = T.getValue().data();
+  };
 
 private:
   void lexIdentifier(Token &Result, const char *CurrentPtr);
   void lexExtendedIdentifier(Token &Result);
 
-  void lexStringLiteral(Token &Result);
+  void lexStringLiteral(Token &Result, const char * CurrentPtr);
   void lexCharacterLiteral(Token &Result, const char *CurrentPtr);
 
   void lexNumber(Token &Result, const char *CurrentPtr);
@@ -39,26 +44,24 @@ private:
   void lexBasedLiteral(Token &Result, const char *CurrentPtr);
   void lexBitStringLiteral(Token &Result, const char *CurrentPtr);
 
-  void LexCompoundDelimiter(Token &Result, const char *CurrentPtr);
+  void lexCompoundDelimiter(Token &Result, const char *CurrentPtr);
 
   void lexSingleLineComment(Token &Result);
   void lexMultiLineComment(Token &Result);
 
-  void SkipSingleLineComment();
-  void SkipMultilineComment();
-  void SkipWhitespace(const char *CurrentPtr);
+  void skipSingleLineComment();
+  void skipMultilineComment();
+  void skipWhitespace(const char *CurrentPtr);
 
-  void FormToken(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
-    Result.setTokenKind(Kind);
+  void formToken(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
+    Result.setKind(Kind);
+    Result.setLocation(BufferPtr);
     BufferPtr = TokenEnd;
   }
 
-  void FormToken(Token &Result, tok::TokenKind Kind) {
-    Result.setTokenKind(Kind);
-  }
-
-  void FormTokenWithValue(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
-    Result.setTokenKind(Kind);
+  void formTokenWithValue(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
+    Result.setKind(Kind);
+    Result.setLocation(BufferPtr);
     Result.setValue(BufferPtr, TokenEnd - BufferPtr);
     BufferPtr = TokenEnd;
   }
