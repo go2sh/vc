@@ -332,7 +332,7 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
       break;
     }
   }
-  FormToken(Result, tok::basic_identifier, CurrentPtr);
+  FormTokenWithValue(Result, tok::basic_identifier, CurrentPtr);
 }
 void Lexer::lexExtendedIdentifier(Token &Result) { return; }
 
@@ -342,7 +342,7 @@ void Lexer::lexCharacterLiteral(Token &Result, const char *CurrentPtr) {
     return;
   }
   CurrentPtr += 2;
-  FormToken(Result, tok::character_literal, CurrentPtr);
+  FormTokenWithValue(Result, tok::character_literal, CurrentPtr);
 }
 
 void Lexer::lexStringLiteral(Token &Result) {
@@ -406,7 +406,7 @@ void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
     return;
   } else if (!IsLetter(*CurrentPtr)) {
     // Every other character then a letter terminates the decimal literal
-    FormToken(Result, tok::decimal_literal, CurrentPtr);
+    FormTokenWithValue(Result, tok::decimal_literal, CurrentPtr);
   } else {
     // seperator between literals and identifier
     std::cout << "Need seperator between identifier and decimal literal."
@@ -446,7 +446,7 @@ void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
       CurrentPtr++;
     }
   }
-  FormToken(Result, tok::decimal_literal, CurrentPtr);
+  FormTokenWithValue(Result, tok::decimal_literal, CurrentPtr);
 }
 void Lexer::lexBasedLiteral(Token &Result, const char *CurrentPtr) { return; }
 void Lexer::lexBitStringLiteral(Token &Result, const char *CurrentPtr) {}
