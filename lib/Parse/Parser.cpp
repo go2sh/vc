@@ -18,6 +18,8 @@ bool Parser::parseDesignFile() {
 
 bool Parser::parseDesignUnit() {
   parseContextClause();
+  parsePrimaryUnit();
+  parseSecondaryUnit();
 
   return false;
 }
@@ -67,6 +69,18 @@ void Parser::parseLibraryClause() {
   }
 }
 
-void Parser::parseUseClause() {}
+void Parser::parseUseClause() {
+  consumeToken(tok::kw_use);
+  
+  do {
+    parseName();
+  } while (consumeIf(tok::comma));
+
+  if (Tok.isNot(tok::semicolon)) {
+    std::cout << "expected semicolon" << std::endl;
+    return;
+  }
+  consumeToken(tok::semicolon);
+}
 
 bool Parser::parseContextReference() { return true; }

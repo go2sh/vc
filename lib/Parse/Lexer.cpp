@@ -338,8 +338,9 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
       break;
     }
   }
-  tok::TokenKind Kind = kindOfIdentifier(std::string(BufferPtr, CurrentPtr-BufferPtr));
-  formTokenWithValue(Result, Kind, CurrentPtr);
+
+  formTokenWithValue(Result, tok::basic_identifier, CurrentPtr);
+  Result.setKind(kindOfIdentifier(Result.getValue()));
 }
 void Lexer::lexExtendedIdentifier(Token &Result) { return; }
 

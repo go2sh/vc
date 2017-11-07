@@ -42,6 +42,18 @@ public:
   void parseUseClause();
   bool parseContextReference();
 
+  void parsePrimaryUnit();
+  void parseSecondaryUnit();
+
+  void parseEntityDecl();
+
+  void parseArchitectureDecl();
+
+  void parsePortClause();
+  void parseGenericClause();
+
+  void parseName();
+
 private:
 };
 }; // namespace vc

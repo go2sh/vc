@@ -4,4 +4,8 @@ add_library(vc
     Parse/Token.cpp
     Parse/Lexer.cpp
     Parse/Parser.cpp
+    Parse/ParseName.cpp
+    Parse/ParseExpr.cpp
+    Parse/ParseDecl.cpp
+    Parse/ParseUnit.cpp
 )
