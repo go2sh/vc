@@ -6,6 +6,7 @@ add_library(vc
     Parse/Parser.cpp
     Parse/ParseName.cpp
     Parse/ParseExpr.cpp
+    Parse/ParseType.cpp
     Parse/ParseDecl.cpp
     Parse/ParseUnit.cpp
 )

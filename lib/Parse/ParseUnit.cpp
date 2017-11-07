@@ -103,8 +103,18 @@ void Parser::parseArchitectureDecl() {
   }
   consumeToken(tok::kw_is);
 
-  while (true) {
-    break;
+  bool parseDecl = true;
+  while (parseDecl) {
+    switch(Tok.getKind()) {
+      case tok::kw_signal:
+        parseSignalDecl();
+        break;
+      case tok::kw_subtype:
+        parseSubtypeDecl();
+        break;
+      default:
+        parseDecl = false;
+    }
   }
 
   if (Tok.isNot(tok::kw_begin)) {

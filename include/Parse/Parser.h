@@ -4,6 +4,9 @@
 #include "Common/TokenKinds.h"
 #include "Parse/Lexer.h"
 #include "Parse/Token.h"
+#include "AST/Decl.h"
+#include "AST/Type.h"
+#include "AST/Expr.h"
 #include <cassert>
 
 namespace vc {
@@ -46,13 +49,33 @@ public:
   void parseSecondaryUnit();
 
   void parseEntityDecl();
-
+  void parsePackageDecl();
+  void parseContextDecl();
   void parseArchitectureDecl();
+  void parsePackageBody();
 
   void parsePortClause();
   void parseGenericClause();
 
-  void parseName();
+  Decl *parseSignalDecl(bool Interface = false);
+  Decl *parseSubtypeDecl();
+  Decl *parseTypeDecl();
+
+  Type *parseSubtypeIndication();
+  void parseIndexOrRecordConstr();
+  void parseRangeConstr(bool AllowUnconstrained = false);
+
+  Expr *parseName();
+  Expr *parseSelectedName();
+
+  Expr *parseExpr();
+  Expr *parseLogicalExpr();
+  Expr *parseRelationExpr();
+  Expr *parseShiftExpr();
+  Expr *parseSimpleExpr();
+  Expr *parseTermExpr();
+  Expr *parseFactorExpr();
+  Expr *parsePrimaryExpr();
 
 private:
 };

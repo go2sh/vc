@@ -470,15 +470,15 @@ void Lexer::lexCompoundDelimiter(Token &Result, const char *CurrentPtr) {
       ++CurrentPtr;                                                            \
       formToken(Result, t2, CurrentPtr);                                       \
     } else {                                                                   \
-      formToken(Result, t2, CurrentPtr);                                       \
+      formToken(Result, t1, CurrentPtr);                                       \
     }                                                                          \
     return;                                                                    \
   }
 
-  TwoByteCompound('=', '>', tok::arrow, tok::equals);
-  TwoByteCompound('*', '*', tok::double_star, tok::asterisk);
-  TwoByteCompound(':', '=', tok::variable_assignment, tok::colon);
-  TwoByteCompound('/', '=', tok::inequality, tok::slash);
+  TwoByteCompound('=', '>', tok::equal, tok::arrow);
+  TwoByteCompound('*', '*', tok::asterisk, tok::double_star);
+  TwoByteCompound(':', '=', tok::colon, tok::variable_assignment);
+  TwoByteCompound('/', '=', tok::slash, tok::inequal);
 
   if (*(CurrentPtr - 1) == '>') {
     if (*CurrentPtr == '=') {
@@ -488,7 +488,7 @@ void Lexer::lexCompoundDelimiter(Token &Result, const char *CurrentPtr) {
       CurrentPtr++;
       formToken(Result, tok::double_greater, CurrentPtr);
     } else {
-      formToken(Result, tok::greater_than, CurrentPtr);
+      formToken(Result, tok::greater, CurrentPtr);
     }
     BufferPtr = CurrentPtr;
     return;
@@ -504,13 +504,13 @@ void Lexer::lexCompoundDelimiter(Token &Result, const char *CurrentPtr) {
       CurrentPtr++;
       formToken(Result, tok::double_less, CurrentPtr);
     } else {
-      formToken(Result, tok::less_then, CurrentPtr);
+      formToken(Result, tok::less, CurrentPtr);
     }
     return;
   }
   if (*(CurrentPtr - 1) == '?') {
     CurrentPtr++;
-    TwoByteCompound('/', '=', tok::matching_inequality, tok::matching_equality);
+    TwoByteCompound('/', '=', tok::matching_inequal, tok::matching_equal);
     TwoByteCompound('<', '=', tok::matching_less_equal, tok::matching_less);
     TwoByteCompound('>', '=', tok::matching_greate_equal,
                     tok::matching_greater);
