@@ -61,11 +61,18 @@ public:
   Decl *parseSubtypeDecl();
   Decl *parseTypeDecl();
 
+  void parseArrayTypeDef();
+  void parseRecordTypeDef();
+  void parseEnumTypeDef();
+  void parseRangeTypeDef();
+
   Type *parseSubtypeIndication();
-  void parseIndexOrRecordConstr();
+  void parseArrayOrRecordConstr();
+  void parseRecordConstr();
   void parseRangeConstr(bool AllowUnconstrained = false);
 
   Expr *parseName();
+  Expr *parseSimpleName();
   Expr *parseSelectedName();
 
   Expr *parseExpr();

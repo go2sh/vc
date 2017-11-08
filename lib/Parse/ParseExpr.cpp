@@ -6,28 +6,35 @@
 using namespace vc;
 
 Expr *Parser::parsePrimaryExpr() {
-  Expr *R;
+  Expr *R = new Expr(ExprKind::AnyExpr);
   switch (Tok.getKind()) {
   case tok::basic_identifier:
   case tok::extended_identifier:
     R = parseName();
     break;
   case tok::string_literal:
+    consumeToken();
     break;
   case tok::character_literal:
+    consumeToken();
     break;
   case tok::based_literal:
+    consumeToken();
     break;
   case tok::decimal_literal:
+    consumeToken();
     break;
   case tok::bit_string_literal:
+    consumeToken();
     break;
 
   case tok::kw_new:
+    consumeToken();
     break;
+
   case tok::left_parenthesis:
     consumeToken();
-    parseExpr();
+    R = parseExpr();
     if (Tok.isNot(tok::right_parenthesis)) {
       std::cout << "expected )" << std::endl;
     }
@@ -64,6 +71,7 @@ Expr *Parser::parseFactorExpr() {
       consumeToken();
       RHS = parsePrimaryExpr();
     } else {
+      Expr = LHS;
     }
   }
 
@@ -71,13 +79,14 @@ Expr *Parser::parseFactorExpr() {
 };
 
 Expr *Parser::parseTermExpr() {
-  Expr *LHS, *RHS, *R;
-  bool hasSign = consumeIf(tok::asterisk) | consumeIf(tok::slash) | consumeIf(tok::kw_mod) | consumeIf(tok::kw_rem);
+  Expr *LHS, *RHS, *R = new Expr(ExprKind::AnyExpr);
+  bool hasSign = consumeIf(tok::asterisk) | consumeIf(tok::slash) |
+                 consumeIf(tok::kw_mod) | consumeIf(tok::kw_rem);
 
   LHS = parseFactorExpr();
 
   // TODO: loop
-  if (Tok.isAny(tok::asterisk, tok::slash,tok::kw_mod,tok::kw_rem)) {
+  if (Tok.isAny(tok::asterisk, tok::slash, tok::kw_mod, tok::kw_rem)) {
     consumeToken();
     RHS = parseFactorExpr();
   } else {
@@ -88,13 +97,14 @@ Expr *Parser::parseTermExpr() {
 }
 
 Expr *Parser::parseSimpleExpr() {
-  Expr *LHS, *RHS, *R;
-  bool hasSign = consumeIf(tok::plus) | consumeIf(tok::minus) | consumeIf(tok::ampersand);
+  Expr *LHS, *RHS, *R = new Expr(ExprKind::DeclRefExpr);
+  bool hasSign =
+      consumeIf(tok::plus) | consumeIf(tok::minus) | consumeIf(tok::ampersand);
 
   LHS = parseTermExpr();
 
   // TODO: loop
-  if (Tok.isAny(tok::plus, tok::minus,tok::ampersand)) {
+  if (Tok.isAny(tok::plus, tok::minus, tok::ampersand)) {
     consumeToken();
     RHS = parseTermExpr();
   } else {
@@ -105,7 +115,7 @@ Expr *Parser::parseSimpleExpr() {
 }
 
 Expr *Parser::parseShiftExpr() {
-  Expr *LHS, *RHS, *R;
+  Expr *LHS, *RHS, *R = new Expr(ExprKind::AnyExpr);
 
   LHS = parseSimpleExpr();
 
@@ -125,7 +135,7 @@ Expr *Parser::parseShiftExpr() {
 }
 
 Expr *Parser::parseRelationExpr() {
-  Expr *LHS, *RHS, *R;
+  Expr *LHS, *RHS, *R = new Expr(ExprKind::AnyExpr);
 
   LHS = parseShiftExpr();
 
@@ -151,7 +161,7 @@ Expr *Parser::parseRelationExpr() {
 }
 
 Expr *Parser::parseLogicalExpr() {
-  Expr *LHS, *RHS, *R;
+  Expr *LHS, *RHS, *R = new Expr(ExprKind::AnyExpr);
 
   LHS = parseRelationExpr();
 
@@ -172,7 +182,7 @@ Expr *Parser::parseLogicalExpr() {
 }
 
 Expr *Parser::parseExpr() {
-  Expr *LHS, *R;
+  Expr *LHS, *R = new Expr(ExprKind::AnyExpr);
 
   if (Tok.is(tok::condition_conversion)) {
     consumeToken();
