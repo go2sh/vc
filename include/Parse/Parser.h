@@ -1,22 +1,23 @@
 #ifndef VC_PARSER_H
 #define VC_PARSER_H
 
+#include "AST/Decl.h"
+#include "AST/Expr.h"
+#include "AST/Type.h"
 #include "Common/TokenKinds.h"
+#include "Diag/DiagnosticEngine.h"
 #include "Parse/Lexer.h"
 #include "Parse/Token.h"
-#include "AST/Decl.h"
-#include "AST/Type.h"
-#include "AST/Expr.h"
 #include <cassert>
 
 namespace vc {
 class Parser {
-public:
-  Parser(Lexer *L) : L(L){};
-
-private:
+  DiagnosticEngine *Diag;
   Lexer *L;
   Token Tok;
+
+public:
+  Parser(DiagnosticEngine &Diag, Lexer *L) : Diag(&Diag), L(L){};
 
 public:
   void consumeToken() {

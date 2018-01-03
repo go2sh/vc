@@ -1,0 +1,1 @@
+ERROR(lex_consecutive_underline, "consecutive '_' is not allowed in a number")

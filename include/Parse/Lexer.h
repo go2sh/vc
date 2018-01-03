@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 #include "Common/TokenKinds.h"
+#include "Diag/DiagnosticEngine.h"
 #include "Parse/Token.h"
 
 namespace vc {
@@ -11,6 +12,7 @@ namespace vc {
 uint32_t validateUTF8(const char *&Ptr, const char *End);
 
 class Lexer {
+  DiagnosticEngine *Diag;
 
   const char *BufferStart;
   const char *BufferEnd;
@@ -24,7 +26,7 @@ class Lexer {
   bool UseUTF8;
 
 public:
-  Lexer(const char *inputBuffer, int length);
+  Lexer(DiagnosticEngine &Diag, const char *inputBuffer, int length);
 
   void lex(Token &Result);
 

@@ -63,7 +63,8 @@ uint32_t vc::validateUTF8(const char *&Ptr, const char *End) {
   return Result;
 }
 
-Lexer::Lexer(const char *Buffer, int Length) {
+Lexer::Lexer(DiagnosticEngine &Diag, const char *Buffer, int Length) {
+  this->Diag = &Diag;
   BufferStart = Buffer;
   BufferEnd = Buffer + Length;
   BufferPtr = (char *)Buffer;
@@ -326,7 +327,7 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
     if (IsLetterDigitUnderline(Char)) {
       if (Char == '_') {
         if (wasUnderscore) {
-          cout << "Adjacent underscores not allowed.";
+          Diag->diagnose(DiagID::lex_consecutive_underline);
         } else {
           wasUnderscore = true;
         }

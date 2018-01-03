@@ -1,0 +1,38 @@
+#if !(defined(DIAG) || (defined(ERROR) && defined(WARNING) && defined(NOTE)))
+#  error Must define either DIAG or the set {ERROR,WARNING,NOTE}
+#endif
+
+#ifndef ERROR
+#  define ERROR(ID,Text)   \
+  DIAG(ERROR,ID,Text)
+#endif
+
+#ifndef WARNING
+#  define WARNING(ID,Text) \
+  DIAG(WARNING,ID,Text)
+#endif
+
+#ifndef NOTE
+#  define NOTE(ID,Text) \
+  DIAG(NOTE,ID,Text)
+#endif
+
+#ifndef REMARK
+#  define REMARK(ID,Text) \
+  DIAG(REMARK,ID,Text)
+#endif
+
+#define DIAG_NO_UNDEF
+
+#include <Parse/DiagnosticsLex.def>
+
+
+#undef DIAG_NO_UNDEF
+
+#if defined(DIAG)
+#  undef DIAG
+#endif
+#undef NOTE
+#undef WARNING
+#undef ERROR
+#undef REMARK
