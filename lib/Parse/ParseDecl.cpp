@@ -13,7 +13,17 @@ Decl *Parser::parseSubtypeDecl() {
   }
   consumeToken();
 
+  if (Tok.isNot(tok::kw_is)) {
+    std::cout << "Expetected identifier" << std::endl;
+  }
+  consumeToken();
+
   parseSubtypeIndication();
+
+  if (Tok.isNot(tok::semicolon)) {
+    std::cout << "Expetected ;" << std::endl;
+  }
+  consumeToken();
   return nullptr;
 }
 
@@ -35,16 +45,25 @@ Decl *Parser::parseTypeDecl() {
   consumeToken();
 
   switch (Tok.getKind()) {
-      case tok::left_parenthesis:
-        // enum type
-        break;
-    case tok::kw_range:
-        break;
-    case tok::kw_array:
-        break;
-    case tok::kw_record:
-        break;
+  case tok::left_parenthesis:
+    parseEnumTypeDef();
+    break;
+  case tok::kw_range:
+    parseRangeTypeDef();
+    break;
+  case tok::kw_array:
+    parseArrayTypeDef();
+    break;
+  case tok::kw_record:
+    parseRecordTypeDef();
+    break;
   }
+
+  if (Tok.isNot(tok::semicolon)) {
+    std::cout << "Expetected ;" << std::endl;
+  }
+  consumeToken();
+
   return nullptr;
 }
 
@@ -67,15 +86,15 @@ Decl *Parser::parseSignalDecl(bool Interface) {
   parseSubtypeIndication();
 
   if (consumeIf(tok::variable_assignment)) {
-      parseExpr();
+    parseExpr();
   }
 
   if (!Interface) {
-    if (Tok.isNot(tok::semicolon))  {
-          std::cout << "Expetected semicolon" << std::endl;
-          return nullptr;
-        }
-        consumeToken();
-    }
+    if (Tok.isNot(tok::semicolon)) {
+      std::cout << "Expetected semicolon" << std::endl;
       return nullptr;
+    }
+    consumeToken();
+  }
+  return nullptr;
 }

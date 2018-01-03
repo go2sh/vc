@@ -112,6 +112,9 @@ void Parser::parseArchitectureDecl() {
       case tok::kw_subtype:
         parseSubtypeDecl();
         break;
+      case tok::kw_type:
+        parseTypeDecl();
+        break;
       default:
         parseDecl = false;
     }

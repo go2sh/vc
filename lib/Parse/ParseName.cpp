@@ -9,13 +9,8 @@ using namespace vc;
 Expr *Parser::parseName() {
   Expr* CurrentExpr;
   bool ParseSubExpr = true;
-  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "Expected identifier" << std::endl;
-    return new ErrorExpr();
-  }
-  CurrentExpr = new DeclRefExpr(Tok.getValue());
-  consumeToken();
 
+  CurrentExpr = parseSimpleName();
 
   while (ParseSubExpr) {
     switch (Tok.getKind()) {
@@ -47,3 +42,14 @@ Expr *Parser::parseSelectedName() {
   consumeToken();
   return Suffix;
 };
+
+Expr *Parser::parseSimpleName() {
+  Expr *R;
+  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+    std::cout << "Expected identifier" << std::endl;
+    return new ErrorExpr();
+  }
+  R = new DeclRefExpr(Tok.getValue());
+  consumeToken();
+  return R;
+}

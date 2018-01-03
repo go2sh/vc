@@ -12,7 +12,7 @@ Type *Parser::parseSubtypeIndication() {
   consumeToken();
 
   if (Tok.is(tok::left_parenthesis)) {
-    parseIndexOrRecordConstr();
+    parseArrayOrRecordConstr();
   }
 
   if (Tok.is(tok::kw_range)) {
@@ -26,18 +26,137 @@ void Parser::parseRangeConstr(bool allowUnconstrained) {
   consumeToken(tok::kw_range);
 
   Expr *LHS, *RHS;
-  if (Tok.isAny(tok::basic_identifier, tok::extended_identifier)) {
-    LHS = parseName();
-    if (LHS->getKind() != ExprKind::AttrExpr || LHS->getKind() != ExprKind::DeclRefExpr) {
-        std::cout << "attribute or identifier expected" << std::endl;
-        return;
+  LHS = parseSimpleExpr();
+
+  if (LHS->getKind() != ExprKind::AttrExpr) {
+    if (Tok.isNot(tok::kw_to, tok::kw_downto)) {
+      std::cout << "expected direction indicator." << std::endl;
+      return;
     }
-  } else {
-      LHS = parseSimpleExpr();
-      if (!LHS->isSimple()) {
-          std::cout << "Expecte simple expr" << std::endl;
-      }
+    consumeToken();
+    RHS = parseSimpleExpr();
   }
 }
 
-void Parser::parseIndexOrRecordConstr() {}
+void Parser::parseArrayOrRecordConstr() {
+  Expr *LHS, *RHS, *R;
+  Token State;
+
+  consumeToken(tok::left_parenthesis);
+  State = Tok;
+
+  if (Tok.is(tok::kw_open)) {
+    consumeToken();
+  } else {
+    LHS = parseSimpleExpr();
+    if (Tok.isNot(tok::kw_to, tok::kw_downto)) {
+      if (LHS->getKind() == ExprKind::DeclRefExpr) {
+        L->restoreToken(State);
+        consumeToken();
+        parseRecordConstr();
+        return;
+      }
+      std::cout << "expected direction indication" << std::endl;
+      return;
+    }
+    consumeToken();
+    RHS = parseSimpleExpr();
+  }
+  if (Tok.isNot(tok::right_parenthesis)) {
+    std::cout << "expected )" << std::endl;
+    return;
+  }
+  consumeToken();
+  if (Tok.is(tok::left_parenthesis)) {
+    parseArrayOrRecordConstr();
+  }
+  return;
+}
+
+void Parser::parseRecordConstr() {
+  Expr *LHS, *RHS, *R;
+
+  do {
+    LHS = parseSimpleName();
+    if (Tok.isNot(tok::left_parenthesis)) {
+      std::cout << "expected (" << std::endl;
+      return;
+    }
+    parseArrayOrRecordConstr();
+  } while (consumeIf(tok::comma));
+
+  if (Tok.isNot(tok::right_parenthesis)) {
+    std::cout << "expected )" << std::endl;
+    return;
+  }
+  consumeToken();
+
+  return;
+}
+
+void Parser::parseArrayTypeDef() {
+  Expr *LHS, *RHS, *R;
+  bool IsUnbounded = false;
+  bool DoCheck = true;
+  consumeToken(tok::kw_array);
+  if (Tok.isNot(tok::left_parenthesis)) {
+    std::cout << "expected (" << std::endl;
+    return;
+  }
+  consumeToken();
+
+  do {
+    LHS = parseSimpleExpr();
+
+    if (DoCheck) {
+      DoCheck = false;
+      IsUnbounded = Tok.getKind() == tok::kw_range;
+    }
+
+    if (IsUnbounded) {
+      if (Tok.isNot(tok::kw_range)) {
+        std::cout << "expeceted range keyword." << std::endl;
+        return;
+      }
+      consumeToken();
+      if (Tok.isNot(tok::box)) {
+        std::cout << "expected <>" << std::endl;
+        return;
+      }
+      consumeToken();
+    } else {
+      if (Tok.isAny(tok::kw_to, tok::kw_downto)) {
+        consumeToken();
+        RHS = parseSimpleExpr();
+      } else {
+        if (LHS->getKind() != ExprKind::AttrExpr) {
+          std::cout << "expected attribute expression";
+        }
+      }
+    }
+  } while (consumeIf(tok::comma));
+
+  if (Tok.isNot(tok::right_parenthesis)) {
+    std::cout << "expected )" << std::endl;
+    return;
+  }
+  consumeToken();
+
+  if (Tok.isNot(tok::kw_of)) {
+    std::cout << "expected of" << std::endl;
+    return;
+  }
+  consumeToken();
+  parseSubtypeIndication();
+
+  if (Tok.isNot(tok::semicolon)) {
+    std::cout << "Expetected ;" << std::endl;
+  }
+  consumeToken();
+}
+
+void Parser::parseRecordTypeDef() {}
+
+void Parser::parseEnumTypeDef() {}
+
+void Parser::parseRangeTypeDef() {}
