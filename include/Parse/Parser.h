@@ -3,6 +3,8 @@
 
 #include "AST/Decl.h"
 #include "AST/Expr.h"
+#include "AST/Identifier.h"
+#include "AST/Stmt.h"
 #include "AST/Type.h"
 #include "Common/TokenKinds.h"
 #include "Diag/DiagnosticEngine.h"
@@ -36,6 +38,13 @@ public:
     consumeToken(K);
     return true;
   }
+
+  template <typename... T> bool consumeIf(tok::TokenKind K1, T... K) {
+    if (!Tok.isAny(K1, K...))
+      return false;
+    consumeToken();
+    return true;
+  };
 
 public:
   bool parseDesignFile();
@@ -84,6 +93,11 @@ public:
   Expr *parseTermExpr();
   Expr *parseFactorExpr();
   Expr *parsePrimaryExpr();
+
+  Expr *parseSensitivityList();
+  Stmt *parseProcessStmt(Identifier *I, bool Postponed);
+  void parseProcessDeclPart();
+  void parseProcessStmtPart();
 
 private:
 };

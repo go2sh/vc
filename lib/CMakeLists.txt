@@ -9,6 +9,7 @@ add_library(vc
     Parse/ParseName.cpp
     Parse/ParseExpr.cpp
     Parse/ParseType.cpp
+    Parse/ParseStmt.cpp
     Parse/ParseDecl.cpp
     Parse/ParseUnit.cpp
 )
