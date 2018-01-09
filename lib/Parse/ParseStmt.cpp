@@ -73,11 +73,11 @@ void Parser::parseWaveform() {
     if (consumeIf(tok::kw_null)) {
 
     } else {
-      R = parseExpr()
+      R = parseExpr();
     }
 
     if (consumeIf(tok::kw_after)) {
-      T = parseExpr()
+      T = parseExpr();
     }
   } while (consumeIf(tok::comma));
 }
@@ -101,7 +101,7 @@ void Parser::parseAggregate() {
     } else {
       parseSimpleExpr();
     }
-  }
+  } while(false);
 }
 
 // 10.5.2
@@ -124,6 +124,4 @@ void Parser::parseSimpleSignalAssignment() {
   } else {
     parseName();
   }
-
-  if ()
 }

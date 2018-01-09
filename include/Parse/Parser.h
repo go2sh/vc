@@ -99,6 +99,11 @@ public:
   void parseProcessDeclPart();
   void parseProcessStmtPart();
 
+  void parseWaveform();
+  void parseAggregate();
+  void parseSimpleSignalAssignment();
+
+
 private:
 };
 }; // namespace vc
