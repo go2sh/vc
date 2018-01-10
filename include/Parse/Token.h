@@ -2,6 +2,7 @@
 #define TOKEN_H
 
 #include "Common/TokenKinds.h"
+#include "Common/SourceLocation.h"
 #include <string>
 #include <sys/types.h>
 
@@ -10,8 +11,8 @@ using namespace std;
 namespace vc {
 class Token {
   tok::TokenKind Kind;
-  string Value;
-  const char *Location;
+  std::string Value;
+  SourceLocation Location;
 
 public:
   Token() : Kind(tok::NUM_TOKENS) {};
@@ -21,8 +22,8 @@ public:
   string &getValue() { return Value; };
   void setValue(std::string & S) { Value = S; };
   void setValue(const char *buf, size_t len) { Value = string(buf, len); }
-  const char *getLocation() { return Location; };
-  void setLocation(const char *Loc) { Location = Loc; };
+  SourceLocation getLocation() { return Location; };
+  void setLocation(SourceLocation Loc) { Location = Loc; };
 
   bool is(tok::TokenKind K) { return Kind == K; }
   
