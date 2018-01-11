@@ -63,11 +63,10 @@ uint32_t vc::validateUTF8(const char *&Ptr, const char *End) {
   return Result;
 }
 
-Lexer::Lexer(DiagnosticEngine &Diag, const char *Buffer, int Length) {
-  this->Diag = &Diag;
-  BufferStart = Buffer;
-  BufferEnd = Buffer + Length;
-  BufferPtr = (char *)Buffer;
+Lexer::Lexer(DiagnosticEngine &Diag, SourceLocation FileLocation, const MemoryBuffer *Buffer) : Diag(&Diag), FileLocation(FileLocation) {
+  BufferStart = Buffer->getBufferStart();
+  BufferEnd = Buffer->getBufferEnd();
+  BufferPtr = BufferStart;
   isAtNewline = true;
   hasWhitespacePrefix = false;
 }
@@ -313,7 +312,7 @@ LexToken:
   formToken(Result, Kind, CurrentPtr);
 }
 
-tok::TokenKind kindOfIdentifier(std::string & Str) {
+tok::TokenKind kindOfIdentifier(StringRef Str) {
   #define KEYWORD(identifier, version) if (Str == #identifier) {return tok::kw_##identifier;}
   #include "Common/TokenKinds.def"
   return tok::basic_identifier;
@@ -327,7 +326,8 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
     if (IsLetterDigitUnderline(Char)) {
       if (Char == '_') {
         if (wasUnderscore) {
-          Diag->diagnose(DiagID::lex_consecutive_underline);
+          DiagnosticBuilder D = Diag->diagnose(DiagID::lex_consecutive_underline);
+          D.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1)));
         } else {
           wasUnderscore = true;
         }

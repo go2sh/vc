@@ -1,4 +1,6 @@
 add_library(vc
+    Common/MemoryBuffer.cpp
+    Common/SourceManager.cpp
     Common/CharInfo.cpp
     Common/TokenKinds.cpp
     Diag/Diagnostic.cpp

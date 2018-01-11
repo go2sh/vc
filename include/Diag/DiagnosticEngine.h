@@ -7,22 +7,27 @@
 #include "Diag/DiagnosticConsumer.h"
 
 namespace vc {
-  class DiagnosticEngine;
+class DiagnosticEngine;
 
 class DiagnosticBuilder {
   friend class DiagnosticEngine;
   DiagnosticEngine *Engine;
   Diagnostic Diag;
 
-  DiagnosticBuilder(DiagnosticEngine &Engine, DiagID ID) : Engine(&Engine), Diag(ID) {}
+  DiagnosticBuilder(DiagnosticEngine &Engine, DiagID ID)
+      : Engine(&Engine), Diag(ID) {}
 
-  //DiagnosticBuilder(const DiagnosticBuilder &) = delete;
-  //DiagnosticBuilder &operator=(const DiagnosticBuilder &) = delete;
-  //DiagnosticBuilder &operator=(DiagnosticBuilder &&) = delete;
+  // DiagnosticBuilder(const DiagnosticBuilder &) = delete;
+  // DiagnosticBuilder &operator=(const DiagnosticBuilder &) = delete;
+  // DiagnosticBuilder &operator=(DiagnosticBuilder &&) = delete;
 
 public:
   DiagnosticBuilder(DiagID ID) : Engine(0), Diag(ID) {}
   ~DiagnosticBuilder() { flush(); }
+
+  void setLocation(SourceLocation Loc) { Diag.Location = Loc; }
+
+private:
   void flush();
 };
 
@@ -35,9 +40,7 @@ public:
     Consumers.push_back(Consumer);
   }
 
-  DiagnosticBuilder diagnose(DiagID ID) {
-  return DiagnosticBuilder(*this, ID);
-}
+  DiagnosticBuilder diagnose(DiagID ID) { return DiagnosticBuilder(*this, ID); }
 
 private:
   void emitDiagnostic(const Diagnostic &D);

@@ -17,18 +17,12 @@ class StdConsumer : public DiagnosticConsumer {
 };
 
 int main(int argc, char ** argv) {
-    std::ifstream in("tests/test.vhd", std::ios::in | std::ios::binary);
-    std::string contents;
-    in.seekg(0, std::ios::end);
-    contents.resize(((int)in.tellg()) + 1);
-    in.seekg(0, std::ios::beg);
-    in.read(&contents[0], contents.size());
-    contents[contents.size()-1] = 0;
-    in.close();
+    unique_ptr<MemoryBuffer> Buf = MemoryBuffer::getFile("tests/test.vhd");
+    SourceLocation Loc = SourceLocation::fromRawEncoding(1);
     DiagnosticEngine Engine;
     StdConsumer Consumer;
     Engine.addConsumer(&Consumer);
-    Lexer lexer(Engine, contents.data(), contents.size()-1);
+    Lexer lexer(Engine, Loc, Buf.get());
     Parser P(Engine, &lexer);
     P.parseDesignFile();
     
