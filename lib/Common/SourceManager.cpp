@@ -2,14 +2,16 @@
 #include "Common/MemoryBuffer.h"
 #include "SourceManager.h"
 
+using namespace vc;
+using namespace vc::SourceManager;
 
 uint32_t SourceManager::getLineNumber(FileLocation Location) {
-    if (FileCache.size() < FileLocation.getID())
+    if (FileCache.size() < FileLocation.getFileID())
         return 0;
-    ContentCache *Content = FileCache[FileLocation.getID()]
-    if (Content->getBuffer()->getLength() < Location.getOffset())
+    ContentCache *Content = FileCache[FileLocation.getFileID()];
+    if (Content->getBuffer()->getBufferSize() < Location.getOffset())
         return 0;
-    char *Buf = Content->getBuffer()->getBufferBegin();
+    const char *Buf = Content->getBuffer()->getBufferStart();
     char *BufEnd = Buf + (char *)Location.getOffset();
     uint32_t Line = 1;
     while (Buf <= BufEnd) {

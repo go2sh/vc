@@ -4,6 +4,18 @@
 #include <stdint.h>
 
 namespace vc {
+
+class SourceFile {
+  uint32_t ID = 0;
+
+public:
+  static SourceFile fromRawEncoding(uint32_t ID) {
+    SourceFile SF;
+    SF.ID = ID;
+    return SF;
+  }
+};
+
 class SourceLocation {
   uint32_t ID = 0;
 
