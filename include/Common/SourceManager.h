@@ -1,25 +1,35 @@
 #ifndef VC_BASIC_SOURCE_MANAGER_H
 #define VC_BASIC_SOURCE_MANAGER_H
 
+#include "Common/MemoryBuffer.h"
 #include "Common/SourceLocation.h"
 #include <vector>
 
 namespace vc {
-namespace SourceManager {
+namespace Detail {
 class ContentCache {
   MemoryBuffer *Buffer;
+  std::string Path;
 
 public:
-  MemoryBuffer *getBuffer() const { return Buffer; }
-};
-} // namespace SourceManager
+  ContentCache(const std::string &Path) : Buffer(nullptr), Path(Path) {}
+  MemoryBuffer *getBuffer();
 
-using namespace vc::SourceManager;
+private:
+  void setBuffer(MemoryBuffer *Buf) { Buffer = Buf; }
+};
+} // namespace Detail
+
 class SourceManager {
-  std::vector<ContentCache *> FileCache;
+  std::vector<Detail::ContentCache *> FileCache;
 
 public:
   SourceManager() { FileCache.push_back(nullptr); };
+
+  SourceFile createSourceFile(const std::string &Path);
+
+  MemoryBuffer *getBuffer(SourceFile File) { }
+  uint32_t getLineNumber(SourceFile File, uint32_t Offset);
 };
 } // namespace vc
 

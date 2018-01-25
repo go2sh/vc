@@ -4,6 +4,7 @@
 
 #include "Diag/DiagnosticConsumer.h"
 #include "Diag/DiagnosticEngine.h"
+#include "Common/SourceManager.h"
 #include "Common/TokenKinds.h"
 #include "Parse/Lexer.h"
 #include "Parse/Parser.h"
@@ -17,12 +18,13 @@ class StdConsumer : public DiagnosticConsumer {
 };
 
 int main(int argc, char ** argv) {
-    unique_ptr<MemoryBuffer> Buf = MemoryBuffer::getFile("tests/test.vhd");
+    SourceManager SrcMgr;
+    SourceFile File = SrcMgr.createSourceFile("tests/test.vhd");
     SourceLocation Loc = SourceLocation::fromRawEncoding(1);
     DiagnosticEngine Engine;
     StdConsumer Consumer;
     Engine.addConsumer(&Consumer);
-    Lexer lexer(Engine, Loc, Buf.get());
+    Lexer lexer(Engine, Loc, SrcMgr.getBuffer(File);
     Parser P(Engine, &lexer);
     P.parseDesignFile();
     

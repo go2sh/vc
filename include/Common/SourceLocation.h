@@ -5,6 +5,8 @@
 
 namespace vc {
 
+class SourceManager;
+
 class SourceFile {
   uint32_t ID = 0;
 
@@ -14,6 +16,9 @@ public:
     SF.ID = ID;
     return SF;
   }
+
+private:
+  friend class SourceManager;
 };
 
 class SourceLocation {
