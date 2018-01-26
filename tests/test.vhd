@@ -1,5 +1,6 @@
 library ieee;
 use ieee.std_logic__1164.all;
+use ieee.std__1164.all;
 
 entity test is
 

@@ -28,7 +28,10 @@ public:
 
   SourceFile createSourceFile(const std::string &Path);
 
-  MemoryBuffer *getBuffer(SourceFile File) { }
+  MemoryBuffer *getBuffer(SourceFile File);
+  std::pair<SourceFile, unsigned> getDecomposedLocation(SourceLocation);
+
+  uint32_t getColumnNumber(SourceFile File, uint32_t Offset);
   uint32_t getLineNumber(SourceFile File, uint32_t Offset);
 };
 } // namespace vc

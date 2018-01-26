@@ -22,6 +22,7 @@ public:
   Diagnostic(DiagID ID) : ID(ID) {}
 
   const char *getString() const;
+  const SourceLocation getLocation() const;
 };
 }; // namespace vc
 #endif

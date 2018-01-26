@@ -7,8 +7,8 @@ MemoryBuffer *Detail::ContentCache::getBuffer() {
   if (Buffer) {
     return Buffer;
   } else {
-      auto Buf = MemoryBuffer::getFile(Path);
-      setBuffer(Buf.release());
+    auto Buf = MemoryBuffer::getFile(Path);
+    setBuffer(Buf.release());
   }
   return Buffer;
 }
@@ -20,14 +20,35 @@ SourceFile SourceManager::createSourceFile(const std::string &Path) {
   return SourceFile::fromRawEncoding(FileCache.size() - 1);
 }
 
-Detail::ContentCache* getContentCache(SourceFile File) const {
-    
-}
-MemoryBuffer *SourceManager::getBuffer(SourceFile File) const {
+// Detail::ContentCache *SourceManager::getContentCache(SourceFile File) {}
 
+std::pair<SourceFile, unsigned> SourceManager::getDecomposedLocation(SourceLocation Loc) {
+    return std::pair<SourceFile, unsigned>(SourceFile::fromRawEncoding(1), Loc.getRawEnconding() - 1);
 }
+
+MemoryBuffer *SourceManager::getBuffer(SourceFile File) {
+  Detail::ContentCache *Cache = FileCache[File.ID];
+  return Cache->getBuffer();
+}
+uint32_t SourceManager::getColumnNumber(SourceFile File, uint32_t Offset) {
+  if (FileCache.size() < File.ID)
+    return 0;
+  Detail::ContentCache *Content = FileCache[File.ID];
+  if (Content->getBuffer()->getBufferSize() < Offset)
+    return 0;
+  const char *Buf = Content->getBuffer()->getBufferStart();
+  const char *Pos = Buf;
+  const char *BufEnd = Buf + Offset;
+  while (Buf <= BufEnd) {
+    if (*Buf == '\n')
+      Pos = Buf;
+    Buf++;
+  }
+  return static_cast<uint32_t>(BufEnd - Pos);
+}
+
 uint32_t SourceManager::getLineNumber(SourceFile File, uint32_t Offset) {
-  if (FileCache.size() < File[ID])
+  if (FileCache.size() < File.ID)
     return 0;
   Detail::ContentCache *Content = FileCache[File.ID];
   if (Content->getBuffer()->getBufferSize() < Offset)

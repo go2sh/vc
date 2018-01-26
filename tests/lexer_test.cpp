@@ -12,8 +12,12 @@
 using namespace vc;
 
 class StdConsumer : public DiagnosticConsumer {
+    SourceManager Mgr;
+public:
+    StdConsumer(const SourceManager &Mgr) : Mgr(Mgr) {}
     virtual void handleDiagnostic(const Diagnostic & Diag) {
-        std::cout << Diag.getString();
+        auto data = Mgr.getDecomposedLocation(Diag.getLocation());
+        std::cout << Mgr.getLineNumber(data.first, data.second) << ":" << Mgr.getColumnNumber(data.first, data.second) << ":" << Diag.getString() << std::endl;
     }
 };
 
@@ -22,9 +26,9 @@ int main(int argc, char ** argv) {
     SourceFile File = SrcMgr.createSourceFile("tests/test.vhd");
     SourceLocation Loc = SourceLocation::fromRawEncoding(1);
     DiagnosticEngine Engine;
-    StdConsumer Consumer;
+    StdConsumer Consumer(SrcMgr);
     Engine.addConsumer(&Consumer);
-    Lexer lexer(Engine, Loc, SrcMgr.getBuffer(File);
+    Lexer lexer(Engine, Loc, SrcMgr.getBuffer(File));
     Parser P(Engine, &lexer);
     P.parseDesignFile();
     
