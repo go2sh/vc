@@ -14,6 +14,7 @@ class ContentCache {
 public:
   ContentCache(const std::string &Path) : Buffer(nullptr), Path(Path) {}
   MemoryBuffer *getBuffer();
+  std::string getPath() { return Path;}
 
 private:
   void setBuffer(MemoryBuffer *Buf) { Buffer = Buf; }
@@ -33,6 +34,7 @@ public:
 
   uint32_t getColumnNumber(SourceFile File, uint32_t Offset);
   uint32_t getLineNumber(SourceFile File, uint32_t Offset);
+  std::string getPath(SourceFile File);
 };
 } // namespace vc
 

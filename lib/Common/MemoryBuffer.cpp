@@ -2,6 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <memory>
+
 
 using namespace vc;
 
@@ -14,7 +16,7 @@ void MemoryBuffer::init(const char *Start, const char *End){
 std::unique_ptr<MemoryBuffer> MemoryBuffer::getFile(const std::string &Filename) {
     std::ifstream inputFile(Filename.c_str(), std::ios::in | std::ios::binary);
     std::unique_ptr<MemoryBuffer> mem = std::make_unique<MemoryBuffer>();
-    size_t size;
+    std::size_t size;
     char *data;
 
     // Get input filesize

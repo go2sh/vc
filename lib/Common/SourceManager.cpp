@@ -63,3 +63,7 @@ uint32_t SourceManager::getLineNumber(SourceFile File, uint32_t Offset) {
   }
   return Line;
 }
+
+std::string SourceManager::getPath(SourceFile File) {
+  return FileCache[File.ID]->getPath();
+}

@@ -16,7 +16,7 @@ private:
 public:
   const char *getBufferStart() const { return BufferStart; }
   const char *getBufferEnd() const { return BufferEnd; }
-  size_t getBufferSize() const { return BufferEnd - BufferStart; }
+  std::size_t getBufferSize() const { return BufferEnd - BufferStart; }
 
   StringRef getBuffer() const {
     return StringRef(BufferStart, getBufferSize());
