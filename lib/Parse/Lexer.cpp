@@ -3,9 +3,9 @@
 
 #include "Common/CharInfo.h"
 #include "Common/TokenKinds.h"
+#include "Parse/DiagnosticsLex.h"
 #include "Parse/Lexer.h"
 #include "Parse/Token.h"
-#include "Parse/DiagnosticsLex.h"
 
 using namespace vc;
 
@@ -64,7 +64,9 @@ uint32_t vc::validateUTF8(const char *&Ptr, const char *End) {
   return Result;
 }
 
-Lexer::Lexer(DiagnosticEngine &Diag, SourceLocation FileLocation, const MemoryBuffer *Buffer) : Diag(&Diag), FileLocation(FileLocation) {
+Lexer::Lexer(DiagnosticEngine &Diag, SourceLocation FileLocation,
+             const MemoryBuffer *Buffer)
+    : Diag(&Diag), FileLocation(FileLocation) {
   BufferStart = Buffer->getBufferStart();
   BufferEnd = Buffer->getBufferEnd();
   BufferPtr = BufferStart;
@@ -314,8 +316,11 @@ LexToken:
 }
 
 tok::TokenKind kindOfIdentifier(StringRef Str) {
-  #define KEYWORD(identifier, version) if (Str == #identifier) {return tok::kw_##identifier;}
-  #include "Common/TokenKinds.def"
+#define KEYWORD(identifier, version)                                           \
+  if (Str == #identifier) {                                                    \
+    return tok::kw_##identifier;                                               \
+  }
+#include "Common/TokenKinds.def"
   return tok::basic_identifier;
 }
 
@@ -327,8 +332,9 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
     if (IsLetterDigitUnderline(Char)) {
       if (Char == '_') {
         if (wasUnderscore) {
-          DiagnosticBuilder D = Diag->diagnose(diag::lex_consecutive_underline);
-          D.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1)));
+          DiagnosticBuilder D = Diag->diagnose(diag::lex_consecutive_underline_identifier);
+          D.setLocation(FileLocation.getLocWithOffset(
+              (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1)));
         } else {
           wasUnderscore = true;
         }
@@ -355,7 +361,7 @@ void Lexer::lexCharacterLiteral(Token &Result, const char *CurrentPtr) {
   formTokenWithValue(Result, tok::character_literal, CurrentPtr);
 }
 
-void Lexer::lexStringLiteral(Token &Result, const char * CurrentPtr) {
+void Lexer::lexStringLiteral(Token &Result, const char *CurrentPtr) {
   bool escapeQuotation = false;
   while (true) {
     char C = *CurrentPtr++;
@@ -374,7 +380,7 @@ void Lexer::lexStringLiteral(Token &Result, const char * CurrentPtr) {
         CurrentPtr--;
         return;
       }
-    }else {
+    } else {
       escapeQuotation = false;
     }
   }
@@ -385,11 +391,31 @@ void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
 
   // Consume base or integer
   while (IsNumericUnderline(*CurrentPtr)) {
-    if (wasUnderline && *CurrentPtr == '_') {
-      cout << "Error: Consecutive underline not allowed." << endl;
-    }
     wasUnderline = *CurrentPtr == '_';
     CurrentPtr++;
+
+    // Check for double underline and trailing underlines
+    if (wasUnderline && *CurrentPtr == '_') {
+      SourceLocation FirstInvalid, LastInvalid;
+
+      // Skip additional underlines and search for last invalid underline
+      FirstInvalid = FileLocation.getLocWithOffset(
+          (uint32_t)(uintptr_t)(CurrentPtr - BufferStart));
+      while (*(CurrentPtr++) == '_' && *CurrentPtr != 0)
+        ;
+      LastInvalid = FileLocation.getLocWithOffset(
+          (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1));
+
+      // Check for trailing underlines
+      if (IsNumericUnderline(*CurrentPtr)) {
+        DiagnosticBuilder D = Diag->diagnose(diag::lex_consecutive_underline_number);
+        D.setLocation(FirstInvalid);
+      } else {
+        DiagnosticBuilder D = Diag->diagnose(diag::lex_trailing_underline_number);
+        D.setLocation(FirstInvalid);
+      }
+      
+    }
   }
 
   // Check for based literal
@@ -401,31 +427,23 @@ void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
   // Check for decimal literal
   if (*CurrentPtr == '.') {
     lexDecimalLiteral(Result, CurrentPtr++);
+    return;
   }
 
+  // TODO: 2008 Feauture
   if (IsBitStringModifier(*CurrentPtr)) {
-    // We have a bit string literal
-    if (*CurrentPtr == 's' || *CurrentPtr == 'S' || *CurrentPtr == 'u' ||
-        *CurrentPtr == 'U') {
-      if (IsBitStringBase(*(++CurrentPtr))) {
-        lexBitStringLiteral(Result, CurrentPtr++);
-      } else {
-        std::cout << "Unexspected character." << endl;
-      }
-    } else if (IsBitStringBase(*CurrentPtr)) {
-      lexBitStringLiteral(Result, CurrentPtr++);
-    } else {
-      std::cout << "Unexspected character." << endl;
-    }
+    lexBitStringLiteral(Result, CurrentPtr++);
     return;
-  } else if (!IsLetter(*CurrentPtr)) {
-    // Every other character then a letter terminates the decimal literal
-    formTokenWithValue(Result, tok::decimal_literal, CurrentPtr);
-  } else {
-    // seperator between literals and identifier
-    std::cout << "Need seperator between identifier and decimal literal."
-              << endl;
   }
+
+  // Every other character terminates the decimal literal
+  if (IsLetter(*CurrentPtr)) {
+    DiagnosticBuilder D =
+        Diag->diagnose(diag::missing_seperator_decimal_identifier);
+    D.setLocation(FileLocation.getLocWithOffset(
+        (uint32_t)(uintptr_t)(CurrentPtr - BufferStart)));
+  }
+  formTokenWithValue(Result, tok::decimal_literal, CurrentPtr);
 }
 
 void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
