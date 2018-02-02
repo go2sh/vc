@@ -5,6 +5,7 @@
 #include "Common/TokenKinds.h"
 #include "Parse/Lexer.h"
 #include "Parse/Token.h"
+#include "Parse/DiagnosticsLex.h"
 
 using namespace vc;
 
@@ -326,7 +327,7 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
     if (IsLetterDigitUnderline(Char)) {
       if (Char == '_') {
         if (wasUnderscore) {
-          DiagnosticBuilder D = Diag->diagnose(DiagID::lex_consecutive_underline);
+          DiagnosticBuilder D = Diag->diagnose(diag::lex_consecutive_underline);
           D.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1)));
         } else {
           wasUnderscore = true;

@@ -5,11 +5,7 @@
 #include <stdint.h>
 
 namespace vc {
-enum class DiagID : uint32_t {
-  invalid_diagnostic,
-#define DIAG(Type, ID, Text) ID
-#include <Diag/DiagnosticsAll.def>
-};
+enum class DiagID : uint32_t;
 
 class DiagnosticBuilder;
 
