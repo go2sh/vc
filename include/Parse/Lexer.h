@@ -40,39 +40,38 @@ public:
   void restoreToken(Token &T) { TokenStart = T.getValue().data(); };
 
 private:
-  void lexIdentifier(Token &Result, const char *CurrentPtr);
+  void lexIdentifier(Token &Result);
   void lexExtendedIdentifier(Token &Result);
 
-  void lexStringLiteral(Token &Result, const char *CurrentPtr);
-  void lexCharacterLiteral(Token &Result, const char *CurrentPtr);
+  void lexStringLiteral(Token &Result);
+  void lexCharacterLiteral(Token &Result);
 
-  void lexNumber(Token &Result, const char *CurrentPtr);
-  void lexInteger(Token &Resilt, const char *CurrentPtr);
-  void lexDecimalLiteral(Token &Result, const char *CurrentPtr);
-  void lexBasedLiteral(Token &Result, const char *CurrentPtr);
-  void lexBitStringLiteral(Token &Result, const char *CurrentPtr);
+  void lexNumber(Token &Result);
+  void lexInteger(Token &Resilt);
+  void lexDecimalLiteral(Token &Result);
+  void lexBasedLiteral(Token &Result);
+  void lexBitStringLiteral(Token &Result);
 
-  void lexCompoundDelimiter(Token &Result, const char *CurrentPtr);
+  void lexCompoundDelimiter(Token &Result);
 
   void lexSingleLineComment(Token &Result);
   void lexMultiLineComment(Token &Result);
 
   void skipSingleLineComment();
   void skipMultilineComment();
-  void skipWhitespace(const char *CurrentPtr);
+  void skipWhitespace();
 
-  void formToken(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
+  void formToken(Token &Result, tok::TokenKind Kind) {
     Result.setKind(Kind);
-    Result.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(TokenEnd - BufferStart)));
-    TokenStart = TokenEnd;
+    Result.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(TokenStart - BufferStart)));
+    TokenStart = CurrentPtr;
   }
 
-  void formTokenWithValue(Token &Result, tok::TokenKind Kind,
-                          const char *TokenEnd) {
+  void formTokenWithValue(Token &Result, tok::TokenKind Kind) {
     Result.setKind(Kind);
-    Result.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(TokenEnd - BufferStart)));
-    Result.setValue(StringRef(BufferPtr, TokenEnd - BufferPtr));
-    BufferPtr = TokenEnd;
+    Result.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(TokenStart - BufferStart)));
+    Result.setValue(StringRef(TokenStart, (size_t)(CurrentPtr - TokenStart)));
+    TokenStart = CurrentPtr;
   }
 };
 

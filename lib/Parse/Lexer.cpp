@@ -69,23 +69,23 @@ Lexer::Lexer(DiagnosticEngine &Diag, SourceLocation FileLocation,
     : Diag(&Diag), FileLocation(FileLocation) {
   BufferStart = Buffer->getBufferStart();
   BufferEnd = Buffer->getBufferEnd();
-  BufferPtr = BufferStart;
+  TokenStart = BufferStart;
+  CurrentPtr = BufferStart;
   isAtNewline = true;
   hasWhitespacePrefix = false;
 }
 
 void Lexer::lex(Token &Result) {
 LexToken:
-  assert(BufferPtr >= BufferStart && BufferPtr <= BufferEnd);
+  assert(CurrentPtr >= BufferStart && CurrentPtr <= BufferEnd);
 
-  const char *CurrentPtr = BufferPtr;
   if (*CurrentPtr == ' ' || *CurrentPtr == '\t' || *CurrentPtr == 0xA0) {
     CurrentPtr++;
     while (*CurrentPtr == ' ' || *CurrentPtr == '\t' || *CurrentPtr == 0xA0) {
       CurrentPtr++;
     }
     hasWhitespacePrefix = true;
-    BufferPtr = CurrentPtr;
+    TokenStart = CurrentPtr;
   }
 
   char Char = *(CurrentPtr++);
@@ -98,13 +98,13 @@ LexToken:
       goto LexToken;
     }
     CurrentPtr--;
-    formToken(Result, tok::eof, CurrentPtr);
+    formToken(Result, tok::eof);
     return;
   case ' ':
   case (char)0xA0: // NBSP
   case '\t':
     hasWhitespacePrefix = true;
-    skipWhitespace(CurrentPtr);
+    skipWhitespace();
     goto LexToken;
   case '\v':
   case '\f':
@@ -116,7 +116,7 @@ LexToken:
   case '\n':
     hasWhitespacePrefix = false;
     isAtNewline = true;
-    skipWhitespace(CurrentPtr);
+    skipWhitespace();
     goto LexToken;
 
   case '0':
@@ -129,7 +129,7 @@ LexToken:
   case '7':
   case '8':
   case '9':
-    lexNumber(Result, CurrentPtr);
+    lexNumber(Result);
     return;
 
   case 'a':
@@ -184,7 +184,7 @@ LexToken:
   case 'Y':
   case 'z':
   case 'Z':
-    lexIdentifier(Result, CurrentPtr);
+    lexIdentifier(Result);
     return;
 
   // Simple bit string literal chars
@@ -196,13 +196,12 @@ LexToken:
   case 'X':
   case 'd':
   case 'D':
-    Char = *CurrentPtr;
-    if (Char == '"') {
-      // We use the BufferPtr to get in sync with a preceeding length
-      lexBitStringLiteral(Result, BufferPtr);
+    if (*CurrentPtr == '"') {
+      CurrentPtr++;
+      lexBitStringLiteral(Result);
       return;
     }
-    lexIdentifier(Result, CurrentPtr);
+    lexIdentifier(Result);
     return;
 
   // Bitstring modifier chars
@@ -211,21 +210,19 @@ LexToken:
   case 's':
   case 'S':
     Char = *CurrentPtr;
-    if ((Char == 'B' || Char == 'b' || Char == 'X' || Char == 'x' ||
-         Char == 'O' || Char == 'o') &&
-        *(CurrentPtr + 1) == '"') {
-      // Get in sync with preeciding length
-      lexBitStringLiteral(Result, BufferPtr);
+    if (IsBitStringBase(*CurrentPtr) && *(CurrentPtr + 1) == '"') {
+      CurrentPtr += 2;
+      lexBitStringLiteral(Result);
       return;
     }
-    lexIdentifier(Result, CurrentPtr);
+    lexIdentifier(Result);
     return;
 
   case '\'':
-    lexCharacterLiteral(Result, CurrentPtr);
+    lexCharacterLiteral(Result);
     return;
   case '"':
-    lexStringLiteral(Result, CurrentPtr);
+    lexStringLiteral(Result);
     return;
   case '\\':
     lexExtendedIdentifier(Result);
@@ -252,7 +249,7 @@ LexToken:
         goto LexToken;
       }
     } else {
-      lexCompoundDelimiter(Result, CurrentPtr);
+      lexCompoundDelimiter(Result);
       return;
     }
   // Delimiters
@@ -266,7 +263,7 @@ LexToken:
   case '>':
   case ':':
   case '?':
-    lexCompoundDelimiter(Result, CurrentPtr);
+    lexCompoundDelimiter(Result);
     return;
   // Normal delimiters
   case '&':
@@ -312,7 +309,7 @@ LexToken:
     break;
   }
 
-  formToken(Result, Kind, CurrentPtr);
+  formToken(Result, Kind);
 }
 
 tok::TokenKind kindOfIdentifier(StringRef Str) {
@@ -324,7 +321,7 @@ tok::TokenKind kindOfIdentifier(StringRef Str) {
   return tok::basic_identifier;
 }
 
-void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
+void Lexer::lexIdentifier(Token &Result) {
   bool wasUnderscore = false;
 
   while (CurrentPtr <= BufferEnd) {
@@ -332,7 +329,8 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
     if (IsLetterDigitUnderline(Char)) {
       if (Char == '_') {
         if (wasUnderscore) {
-          DiagnosticBuilder D = Diag->diagnose(diag::lex_consecutive_underline_identifier);
+          DiagnosticBuilder D =
+              Diag->diagnose(diag::lex_consecutive_underline_identifier);
           D.setLocation(FileLocation.getLocWithOffset(
               (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1)));
         } else {
@@ -347,21 +345,21 @@ void Lexer::lexIdentifier(Token &Result, const char *CurrentPtr) {
     }
   }
 
-  formTokenWithValue(Result, tok::basic_identifier, CurrentPtr);
+  formTokenWithValue(Result, tok::basic_identifier);
   Result.setKind(kindOfIdentifier(Result.getValue()));
 }
 void Lexer::lexExtendedIdentifier(Token &Result) { return; }
 
-void Lexer::lexCharacterLiteral(Token &Result, const char *CurrentPtr) {
+void Lexer::lexCharacterLiteral(Token &Result) {
   if (*(CurrentPtr + 1) != '\'') {
-    formToken(Result, tok::tick, CurrentPtr);
+    formToken(Result, tok::tick);
     return;
   }
   CurrentPtr += 2;
-  formTokenWithValue(Result, tok::character_literal, CurrentPtr);
+  formTokenWithValue(Result, tok::character_literal);
 }
 
-void Lexer::lexStringLiteral(Token &Result, const char *CurrentPtr) {
+void Lexer::lexStringLiteral(Token &Result) {
   bool escapeQuotation = false;
   while (true) {
     char C = *CurrentPtr++;
@@ -369,14 +367,14 @@ void Lexer::lexStringLiteral(Token &Result, const char *CurrentPtr) {
       if (*CurrentPtr == '"') {
         escapeQuotation = true;
       } else {
-        formTokenWithValue(Result, tok::string_literal, CurrentPtr);
+        formTokenWithValue(Result, tok::string_literal);
         return;
       }
     } else if (C == 0) {
       if (CurrentPtr != BufferEnd) {
         void(); // lexed 0 char
       } else {
-        formToken(Result, tok::unknown, CurrentPtr);
+        formToken(Result, tok::unknown);
         CurrentPtr--;
         return;
       }
@@ -386,7 +384,7 @@ void Lexer::lexStringLiteral(Token &Result, const char *CurrentPtr) {
   }
 }
 
-void Lexer::lexInteger(Token &Result, const char *CurrentPtr) {
+void Lexer::lexInteger(Token &Result) {
   SourceLocation FirstInvalid, LastInvalid;
   bool wasUnderline;
 
@@ -420,34 +418,39 @@ void Lexer::lexInteger(Token &Result, const char *CurrentPtr) {
 
       // Check for trailing underlines
       if (IsNumeric(*CurrentPtr)) {
-        DiagnosticBuilder D = Diag->diagnose(diag::lex_integer_consecutive_underline);
+        DiagnosticBuilder D =
+            Diag->diagnose(diag::lex_integer_consecutive_underline);
         D.setLocation(FirstInvalid);
       } else {
-        DiagnosticBuilder D = Diag->diagnose(diag::lex_integer_ending_underline);
+        DiagnosticBuilder D =
+            Diag->diagnose(diag::lex_integer_ending_underline);
         D.setLocation(FirstInvalid);
       }
     }
   }
 }
 
-void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
-  lexInteger(Token, CurrentPtr);
+void Lexer::lexNumber(Token &Result) {
+  lexInteger(Result);
 
   // Check for based literal
   if (*CurrentPtr == '#') {
-    lexBasedLiteral(Result, CurrentPtr++);
+    CurrentPtr++;
+    lexBasedLiteral(Result);
     return;
   }
 
   // Check for decimal literal
   if (*CurrentPtr == '.') {
-    lexDecimalLiteral(Result, CurrentPtr++);
+    CurrentPtr++;
+    lexDecimalLiteral(Result);
     return;
   }
 
   // TODO: 2008 Feauture
   if (IsBitStringModifier(*CurrentPtr)) {
-    lexBitStringLiteral(Result, CurrentPtr++);
+    CurrentPtr++;
+    lexBitStringLiteral(Result);
     return;
   }
 
@@ -458,20 +461,12 @@ void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
     D.setLocation(FileLocation.getLocWithOffset(
         (uint32_t)(uintptr_t)(CurrentPtr - BufferStart)));
   }
-  formTokenWithValue(Result, tok::decimal_literal, CurrentPtr);
+  formTokenWithValue(Result, tok::decimal_literal);
 }
 
-void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
-  bool wasUnderline = false;
-
-
-  while (IsNumericUnderline(*CurrentPtr)) {
-    if (wasUnderline && *CurrentPtr == '_') {
-      cout << "Error: Consecutive underline not allowed." << endl;
-    }
-    wasUnderline = *CurrentPtr == '_';
-    CurrentPtr++;
-  }
+void Lexer::lexDecimalLiteral(Token &Result) {
+  // Lex decimal part
+  lexInteger(Result);
 
   // Check for exponent
   if (*CurrentPtr == 'e' || *CurrentPtr == 'E') {
@@ -480,30 +475,23 @@ void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
     if (*CurrentPtr == '-' || *CurrentPtr == '+') {
       CurrentPtr++;
     }
-    if (!IsNumeric(*CurrentPtr)) {
-      cout << "Expected Numeric character." << endl;
-    }
-    while (IsNumericUnderline(*CurrentPtr)) {
-      if (wasUnderline && *CurrentPtr == '_') {
-        cout << "Error: Consecutive underline not allowed." << endl;
-      }
-      wasUnderline = *CurrentPtr == '_';
-      CurrentPtr++;
-    }
+    // Lex exponent
+    lexInteger(Result);
   }
-  formTokenWithValue(Result, tok::decimal_literal, CurrentPtr);
+  formTokenWithValue(Result, tok::decimal_literal);
 }
-void Lexer::lexBasedLiteral(Token &Result, const char *CurrentPtr) { return; }
-void Lexer::lexBitStringLiteral(Token &Result, const char *CurrentPtr) {}
 
-void Lexer::lexCompoundDelimiter(Token &Result, const char *CurrentPtr) {
+void Lexer::lexBasedLiteral(Token &Result) { return; }
+void Lexer::lexBitStringLiteral(Token &Result) {}
+
+void Lexer::lexCompoundDelimiter(Token &Result) {
 #define TwoByteCompound(b1, b2, t1, t2)                                        \
   if (*(CurrentPtr - 1) == b1) {                                               \
     if (*CurrentPtr == b2) {                                                   \
       ++CurrentPtr;                                                            \
-      formToken(Result, t2, CurrentPtr);                                       \
+      formToken(Result, t2);                                                   \
     } else {                                                                   \
-      formToken(Result, t1, CurrentPtr);                                       \
+      formToken(Result, t1);                                                   \
     }                                                                          \
     return;                                                                    \
   }
@@ -516,28 +504,27 @@ void Lexer::lexCompoundDelimiter(Token &Result, const char *CurrentPtr) {
   if (*(CurrentPtr - 1) == '>') {
     if (*CurrentPtr == '=') {
       CurrentPtr++;
-      formToken(Result, tok::greater_equal, CurrentPtr);
+      formToken(Result, tok::greater_equal);
     } else if (*CurrentPtr == '>') {
       CurrentPtr++;
-      formToken(Result, tok::double_greater, CurrentPtr);
+      formToken(Result, tok::double_greater);
     } else {
-      formToken(Result, tok::greater, CurrentPtr);
+      formToken(Result, tok::greater);
     }
-    BufferPtr = CurrentPtr;
     return;
   }
   if (*(CurrentPtr - 1) == '<') {
     if (*CurrentPtr == '=') {
       CurrentPtr++;
-      formToken(Result, tok::less_equal, CurrentPtr);
+      formToken(Result, tok::less_equal);
     } else if (*CurrentPtr == '>') {
       CurrentPtr++;
-      formToken(Result, tok::box, CurrentPtr);
+      formToken(Result, tok::box);
     } else if (*CurrentPtr == '<') {
       CurrentPtr++;
-      formToken(Result, tok::double_less, CurrentPtr);
+      formToken(Result, tok::double_less);
     } else {
-      formToken(Result, tok::less, CurrentPtr);
+      formToken(Result, tok::less);
     }
     return;
   }
@@ -548,10 +535,10 @@ void Lexer::lexCompoundDelimiter(Token &Result, const char *CurrentPtr) {
     TwoByteCompound('>', '=', tok::matching_greate_equal,
                     tok::matching_greater);
     if (*(CurrentPtr - 1) == '?') {
-      formToken(Result, tok::condition_conversion, CurrentPtr);
+      formToken(Result, tok::condition_conversion);
     } else {
       CurrentPtr--; // Set pointer back since only single byte delimiter
-      formToken(Result, tok::question_mark, CurrentPtr);
+      formToken(Result, tok::question_mark);
     }
     return;
   }
@@ -562,7 +549,7 @@ void Lexer::lexMultiLineComment(Token &Result) { return; }
 
 void Lexer::skipSingleLineComment() {}
 void Lexer::skipMultilineComment() {}
-void Lexer::skipWhitespace(const char *CurrentPtr) {
+void Lexer::skipWhitespace() {
   bool SawNewline = false;
 
   while (true) {
@@ -591,5 +578,5 @@ void Lexer::skipWhitespace(const char *CurrentPtr) {
   } else {
     hasWhitespacePrefix = true;
   }
-  BufferPtr = CurrentPtr;
+  TokenStart = CurrentPtr;
 }
