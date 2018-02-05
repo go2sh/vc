@@ -1,5 +1,7 @@
-ERROR(lex_consecutive_underline_number, "consecutive '_' is not allowed in a number")
-ERROR(lex_trailing_underline_number, "trailing '_' is not allowed in a number")
+// Number lexing
+ERROR(lex_integer_start_underline, "staring '_' is not allowed in an integer")
+ERROR(lex_integer_consecutive_underline, "consecutive '_' are not allowed in an integer")
+ERROR(lex_integer_ending_underline, "ending '_' is not allowed in an integer")
 ERROR(lex_consecutive_underline_identifier, "consecutive '_' is not allowed in an identifier")
 ERROR(lex_trailing_underline_identifier, "trailing '_' is not allowed in an identifier")
 ERROR(missing_seperator_decimal_identifier, "missing seperator between decimal literal and identifier")

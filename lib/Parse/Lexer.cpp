@@ -386,18 +386,30 @@ void Lexer::lexStringLiteral(Token &Result, const char *CurrentPtr) {
   }
 }
 
-void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
-  bool wasUnderline = false;
+void Lexer::lexInteger(Token &Result, const char *CurrentPtr) {
+  SourceLocation FirstInvalid, LastInvalid;
+  bool wasUnderline;
 
-  // Consume base or integer
+  // Check for digit as begin
+  if (!IsNumeric(*CurrentPtr)) {
+    // Skip additional underlines and search for last invalid underline
+    FirstInvalid = FileLocation.getLocWithOffset(
+        (uint32_t)(uintptr_t)(CurrentPtr - BufferStart));
+    while (*(CurrentPtr++) == '_' && *CurrentPtr != 0)
+      ;
+    LastInvalid = FileLocation.getLocWithOffset(
+        (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1));
+    DiagnosticBuilder D = Diag->diagnose(diag::lex_integer_start_underline);
+    D.setLocation(FirstInvalid);
+  }
+
+  // Consume the rest of the digits and underlines
   while (IsNumericUnderline(*CurrentPtr)) {
     wasUnderline = *CurrentPtr == '_';
     CurrentPtr++;
 
     // Check for double underline and trailing underlines
     if (wasUnderline && *CurrentPtr == '_') {
-      SourceLocation FirstInvalid, LastInvalid;
-
       // Skip additional underlines and search for last invalid underline
       FirstInvalid = FileLocation.getLocWithOffset(
           (uint32_t)(uintptr_t)(CurrentPtr - BufferStart));
@@ -407,16 +419,19 @@ void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
           (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1));
 
       // Check for trailing underlines
-      if (IsNumericUnderline(*CurrentPtr)) {
-        DiagnosticBuilder D = Diag->diagnose(diag::lex_consecutive_underline_number);
+      if (IsNumeric(*CurrentPtr)) {
+        DiagnosticBuilder D = Diag->diagnose(diag::lex_integer_consecutive_underline);
         D.setLocation(FirstInvalid);
       } else {
-        DiagnosticBuilder D = Diag->diagnose(diag::lex_trailing_underline_number);
+        DiagnosticBuilder D = Diag->diagnose(diag::lex_integer_ending_underline);
         D.setLocation(FirstInvalid);
       }
-      
     }
   }
+}
+
+void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
+  lexInteger(Token, CurrentPtr);
 
   // Check for based literal
   if (*CurrentPtr == '#') {
@@ -449,9 +464,7 @@ void Lexer::lexNumber(Token &Result, const char *CurrentPtr) {
 void Lexer::lexDecimalLiteral(Token &Result, const char *CurrentPtr) {
   bool wasUnderline = false;
 
-  if (!IsNumeric(*CurrentPtr)) {
-    cout << "Expected Numeric character." << endl;
-  }
+
   while (IsNumericUnderline(*CurrentPtr)) {
     if (wasUnderline && *CurrentPtr == '_') {
       cout << "Error: Consecutive underline not allowed." << endl;

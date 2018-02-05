@@ -27,7 +27,8 @@ class Lexer {
   bool UseUTF8;
 
   // Lexer state
-  const char *BufferPtr;
+  const char *TokenStart;
+  const char *CurrentPtr;
   bool isAtNewline;
   bool hasWhitespacePrefix;
 
@@ -36,7 +37,7 @@ public:
 
   void lex(Token &Result);
 
-  void restoreToken(Token &T) { BufferPtr = T.getValue().data(); };
+  void restoreToken(Token &T) { TokenStart = T.getValue().data(); };
 
 private:
   void lexIdentifier(Token &Result, const char *CurrentPtr);
@@ -46,6 +47,7 @@ private:
   void lexCharacterLiteral(Token &Result, const char *CurrentPtr);
 
   void lexNumber(Token &Result, const char *CurrentPtr);
+  void lexInteger(Token &Resilt, const char *CurrentPtr);
   void lexDecimalLiteral(Token &Result, const char *CurrentPtr);
   void lexBasedLiteral(Token &Result, const char *CurrentPtr);
   void lexBitStringLiteral(Token &Result, const char *CurrentPtr);
@@ -62,7 +64,7 @@ private:
   void formToken(Token &Result, tok::TokenKind Kind, const char *TokenEnd) {
     Result.setKind(Kind);
     Result.setLocation(FileLocation.getLocWithOffset((uint32_t)(uintptr_t)(TokenEnd - BufferStart)));
-    BufferPtr = TokenEnd;
+    TokenStart = TokenEnd;
   }
 
   void formTokenWithValue(Token &Result, tok::TokenKind Kind,
