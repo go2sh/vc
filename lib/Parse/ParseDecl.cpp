@@ -3,25 +3,29 @@
 #include "AST/Decl.h"
 #include "AST/Expr.h"
 #include "Parse/Parser.h"
+#include "Parse/DiagnosticsParse.h"
 
 using namespace vc;
 
 Decl *Parser::parseSubtypeDecl() {
   consumeToken(tok::kw_subtype);
   if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "Expetected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
   if (Tok.isNot(tok::kw_is)) {
-    std::cout << "Expetected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
   parseSubtypeIndication();
 
   if (Tok.isNot(tok::semicolon)) {
-    std::cout << "Expetected ;" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
   return nullptr;
@@ -30,7 +34,8 @@ Decl *Parser::parseSubtypeDecl() {
 Decl *Parser::parseTypeDecl() {
   consumeToken(tok::kw_type);
   if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "Expetected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
@@ -40,7 +45,8 @@ Decl *Parser::parseTypeDecl() {
   }
 
   if (Tok.isNot(tok::kw_is)) {
-    std::cout << "Expetected is keyword" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
@@ -60,7 +66,8 @@ Decl *Parser::parseTypeDecl() {
   }
 
   if (Tok.isNot(tok::semicolon)) {
-    std::cout << "Expetected ;" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
@@ -73,13 +80,15 @@ Decl *Parser::parseSignalDecl(bool Interface) {
 
   do {
     if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-      std::cout << "Expetected identifier" << std::endl;
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+      D.setLocation(Tok.getLocation());
     }
     consumeToken();
   } while (consumeIf(tok::comma));
 
   if (Tok.isNot(tok::colon)) {
-    std::cout << "Expetected colon" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_colon);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
@@ -91,7 +100,8 @@ Decl *Parser::parseSignalDecl(bool Interface) {
 
   if (!Interface) {
     if (Tok.isNot(tok::semicolon)) {
-      std::cout << "Expetected semicolon" << std::endl;
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+      D.setLocation(Tok.getLocation());
       return nullptr;
     }
     consumeToken();

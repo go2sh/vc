@@ -16,7 +16,7 @@ signal a : std_logic;
 
 subtype ar is natural range 0 to 20;
 type ina is array(natural range <>) of ar;
-type ina2 is array(0 to 10)) of integer;
+type ina2 is array(0 to 10) of integer;
 signal asd : ina2;
 
 function "and"(a,b: integer) return integer is

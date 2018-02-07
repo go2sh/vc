@@ -1,32 +1,29 @@
 #include <iostream>
 
 #include "Parse/Parser.h"
+#include <Parse/DiagnosticsParse.h>
 
 using namespace vc;
 
-void Parser::parsePrimaryUnit() {
+void Parser::parseLibraryUnit() {
   switch (Tok.getKind()) {
   case tok::kw_entity:
     parseEntityDecl();
     break;
   case tok::kw_package:
+    // Parse def or body
     break;
   case tok::kw_context:
     break;
   case tok::kw_configuration:
     break;
-  }
-};
-
-void Parser::parseSecondaryUnit() {
-  switch (Tok.getKind()) {
   case tok::kw_architecture:
     parseArchitectureDecl();
     break;
-  case tok::kw_package:
-    break;
   default:
-    std::cout << "very bad" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::unexpected_token);
+    D.setLocation(Tok.getLocation());
+    consumeToken();
   }
 };
 
@@ -34,13 +31,15 @@ void Parser::parseEntityDecl() {
   consumeToken(tok::kw_entity);
 
   if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "expected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+    D.setLocation(Tok.getLocation());
     return;
   };
   consumeToken();
 
   if (Tok.isNot(tok::kw_is)) {
-    std::cout << "expected is keyword." << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword);
+    D.setLocation(Tok.getLocation());
     return;
   }
   consumeToken(tok::kw_is);

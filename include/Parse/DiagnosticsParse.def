@@ -22,17 +22,17 @@
   DIAG(REMARK,ID,Text)
 #endif
 
-#define DIAG_NO_UNDEF
+ERROR(expected_semicolon, "expected semicolon")
+ERROR(expected_colon, "expected colon")
+ERROR(expected_identifier, "expected identifier")
+ERROR(expected_keyword, "expected keyword")
+ERROR(unexpected_token, "unexpected token")
 
-#include <Parse/DiagnosticsLex.def>
-#include <Parse/DiagnosticsParse.def>
-
-#undef DIAG_NO_UNDEF
-
-#if defined(DIAG)
+#ifndef DIAG_NO_UNDEF
+# if defined(DIAG)
 #  undef DIAG
+# endif
+# undef NOTE
+# undef WARNING
+# undef ERROR
 #endif
-#undef NOTE
-#undef WARNING
-#undef ERROR
-#undef REMARK

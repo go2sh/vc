@@ -431,7 +431,10 @@ void Lexer::lexInteger(Token &Result) {
 }
 
 void Lexer::lexNumber(Token &Result) {
-  lexInteger(Result);
+  
+  if (IsNumeric(*CurrentPtr))  {
+    lexInteger(Result);
+  }
 
   // Check for based literal
   if (*CurrentPtr == '#') {
@@ -455,7 +458,7 @@ void Lexer::lexNumber(Token &Result) {
   }
 
   // Every other character terminates the decimal literal
-  if (IsLetter(*CurrentPtr)) {
+  if (IsLetter(*CurrentPtr) || (*CurrentPtr == '/' && IsLetter(*(CurrentPtr+1)))) {
     DiagnosticBuilder D =
         Diag->diagnose(diag::missing_seperator_decimal_identifier);
     D.setLocation(FileLocation.getLocWithOffset(

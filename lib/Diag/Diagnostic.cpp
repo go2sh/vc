@@ -19,8 +19,9 @@ namespace vc {
 
 static const char *DiagnosticStrings[] = {
   "Invalid diagnostic",
-#define DIAG(Type, ID, Text) Text
+#define DIAG(Type, ID, Text) Text,
 #include "Diag/DiagnosticsAll.def"
+  ""
 };
 
 const char *Diagnostic::getString() const {

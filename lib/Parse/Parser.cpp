@@ -1,4 +1,6 @@
 #include "Parse/Parser.h"
+#include "Diag/Diagnostic.h"
+#include "Parse/DiagnosticsParse.h"
 
 #include <iostream>
 
@@ -11,19 +13,17 @@ bool Parser::parseDesignFile() {
   bool hasDesignUnit = false;
   do {
     hasDesignUnit = parseDesignUnit();
-  } while (hasDesignUnit);
+  } while (Tok.isNot(tok::eof));
 
   return hasDesignUnit;
 }
 
 bool Parser::parseDesignUnit() {
   parseContextClause();
-  parsePrimaryUnit();
-  parseSecondaryUnit();
+  parseLibraryUnit();
 
   return false;
 }
-
 void Parser::parseContextClause() {
   Token CurrentTok = Tok;
 
@@ -39,6 +39,7 @@ void Parser::parseContextClause() {
       if (!parseContextReference()) {
         L->restoreToken(CurrentTok);
         consumeToken();
+        return;
       }
       break;
     default:
@@ -52,17 +53,16 @@ void Parser::parseLibraryClause() {
 
   while (true) {
     if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-      std::cout << "Expected identifier.";
-      // skip;
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+      D.setLocation(Tok.getLocation());
     }
     consumeToken();
-    if (Tok.is(tok::semicolon)) {
-      consumeToken();
+    if (consumeIf(tok::semicolon)) {
       break;
-    } else if(Tok.is(tok::comma)) {
+    } else if(consumeIf(tok::comma)) {
       continue;
     } else {
-      std::cout << "Expected comma or semicolon";
+      //std::cout << "Expected comma or semicolon";
       //skip
       return;
     }
@@ -77,7 +77,8 @@ void Parser::parseUseClause() {
   } while (consumeIf(tok::comma));
 
   if (Tok.isNot(tok::semicolon)) {
-    std::cout << "expected semicolon" << std::endl;
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+      D.setLocation(Tok.getLocation());
     return;
   }
   consumeToken(tok::semicolon);

@@ -1,5 +1,6 @@
 #include "AST/Type.h"
 #include "Parse/Parser.h"
+#include "Parse/DiagnosticsParse.h"
 #include <iostream>
 
 using namespace vc;
@@ -7,7 +8,8 @@ using namespace vc;
 Type *Parser::parseSubtypeIndication() {
   //
   if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "Expetected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+    D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
@@ -18,6 +20,8 @@ Type *Parser::parseSubtypeIndication() {
   if (Tok.is(tok::kw_range)) {
     parseRangeConstr();
   }
+
+  //TODO: Error
 
   return nullptr;
 }

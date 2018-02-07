@@ -55,8 +55,7 @@ public:
   void parseUseClause();
   bool parseContextReference();
 
-  void parsePrimaryUnit();
-  void parseSecondaryUnit();
+  void parseLibraryUnit();
 
   void parseEntityDecl();
   void parsePackageDecl();
