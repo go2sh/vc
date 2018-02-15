@@ -3,6 +3,7 @@ add_library(vc
     Common/SourceManager.cpp
     Common/CharInfo.cpp
     Common/TokenKinds.cpp
+    Common/StringRef.cpp
     Diag/Diagnostic.cpp
     Diag/DiagnosticEngine.cpp
     Parse/Token.cpp

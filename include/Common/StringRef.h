@@ -19,6 +19,8 @@ public:
   StringRef(const char *Data, size_t Length) : Data(Data), Length(Length) {}
   StringRef(const std::string &Str) : Data(Str.data()), Length(Str.length()) {}
 
+  static const std::size_t npos = -1;
+
   const char *data() const { return Data; }
   bool empty() const { return Length == 0; }
   size_t size() const { return Length; }
@@ -27,6 +29,8 @@ public:
     return Length == S.Length &&
            (Length == 0 || std::memcmp(Data, S.Data, Length) == 0);
   }
+
+  std::size_t find(char C);
 };
 
 inline bool operator==(StringRef LHS, StringRef RHS) { return LHS.equals(RHS); }

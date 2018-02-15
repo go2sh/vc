@@ -17,7 +17,9 @@ public:
     StdConsumer(const SourceManager &Mgr) : Mgr(Mgr) {}
     virtual void handleDiagnostic(const Diagnostic & Diag) {
         auto data = Mgr.getDecomposedLocation(Diag.getLocation());
-        std::cout << Mgr.getLineNumber(data.first, data.second) << ":" << Mgr.getColumnNumber(data.first, data.second) << ":" << Diag.getString() << std::endl;
+        std::cout << Mgr.getLineNumber(data.first, data.second) << ":" << Mgr.getColumnNumber(data.first, data.second) << ":";
+        DiagnosticEngine::formatDiagnosticText(std::cout, Diag.getString(), std::vector<DiagnosticArgument>());
+        std::cout << std::endl;
     }
 };
 

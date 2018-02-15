@@ -1,10 +1,12 @@
 #ifndef VC_DIAG_DIAGNOSTICENGINE_H
 #define VC_DIAG_DIAGNOSTICENGINE_H
 
-#include <vector>
-
 #include "Diag/Diagnostic.h"
 #include "Diag/DiagnosticConsumer.h"
+#include "Common/StringRef.h"
+
+#include <vector>
+#include <ostream>
 
 namespace vc {
 class DiagnosticEngine;
@@ -41,6 +43,8 @@ public:
   }
 
   DiagnosticBuilder diagnose(DiagID ID) { return DiagnosticBuilder(*this, ID); }
+
+  static void formatDiagnosticText(std::ostream &Out, StringRef Text, const std::vector<DiagnosticArgument> &Args);
 
 private:
   void emitDiagnostic(const Diagnostic &D);
