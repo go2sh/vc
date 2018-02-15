@@ -1,8 +1,8 @@
-#include <iostream>
-
 #include "AST/Expr.h"
-
 #include "Parse/Parser.h"
+#include "Parse/DiagnosticsParse.h"
+
+#include <iostream>
 
 using namespace vc;
 
@@ -36,7 +36,8 @@ Expr *Parser::parseSelectedName() {
   } else if (Tok.is(tok::string_literal)) {
     Suffix = new StringLiteralExpr(Tok.getValue());
   } else {
-    std::cout << "Expectect string,character,identifier,all." << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::wrong_selected_name_suffix); 
+    D.setLocation(Tok.getLocation());
     Suffix = new ErrorExpr();
   }
   consumeToken();
@@ -46,7 +47,8 @@ Expr *Parser::parseSelectedName() {
 Expr *Parser::parseSimpleName() {
   Expr *R;
   if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "Expected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier); 
+    D.setLocation(Tok.getLocation());
     return new ErrorExpr();
   }
   R = new DeclRefExpr(Tok.getValue());

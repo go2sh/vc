@@ -1,12 +1,12 @@
 #ifndef VC_DIAG_DIAGNOSTICENGINE_H
 #define VC_DIAG_DIAGNOSTICENGINE_H
 
+#include "Common/StringRef.h"
 #include "Diag/Diagnostic.h"
 #include "Diag/DiagnosticConsumer.h"
-#include "Common/StringRef.h"
 
-#include <vector>
 #include <ostream>
+#include <vector>
 
 namespace vc {
 class DiagnosticEngine;
@@ -29,9 +29,17 @@ public:
 
   void setLocation(SourceLocation Loc) { Diag.Location = Loc; }
 
+  void addRange(SourceRange Range) { Diag.Ranges.push_back(Range); }
+  void addArgument(const DiagnosticArgument &Arg) { Diag.Arguments.push_back(Arg); }
+
 private:
   void flush();
 };
+
+inline DiagnosticBuilder &operator<<(DiagnosticBuilder &D, StringRef S) {
+  D.addArgument(DiagnosticArgument(S));
+  return D;
+}
 
 class DiagnosticEngine {
   friend class DiagnosticBuilder;
@@ -44,7 +52,8 @@ public:
 
   DiagnosticBuilder diagnose(DiagID ID) { return DiagnosticBuilder(*this, ID); }
 
-  static void formatDiagnosticText(std::ostream &Out, StringRef Text, const std::vector<DiagnosticArgument> &Args);
+  static void formatDiagnosticText(std::ostream &Out, StringRef Text,
+                                   const std::vector<DiagnosticArgument> &Args);
 
 private:
   void emitDiagnostic(const Diagnostic &D);

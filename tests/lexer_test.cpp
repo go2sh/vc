@@ -18,7 +18,7 @@ public:
     virtual void handleDiagnostic(const Diagnostic & Diag) {
         auto data = Mgr.getDecomposedLocation(Diag.getLocation());
         std::cout << Mgr.getLineNumber(data.first, data.second) << ":" << Mgr.getColumnNumber(data.first, data.second) << ":";
-        DiagnosticEngine::formatDiagnosticText(std::cout, Diag.getString(), std::vector<DiagnosticArgument>());
+        DiagnosticEngine::formatDiagnosticText(std::cout, Diag.getString(), Diag.getArguments());
         std::cout << std::endl;
     }
 };

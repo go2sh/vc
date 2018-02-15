@@ -22,11 +22,15 @@
   DIAG(REMARK,ID,Text)
 #endif
 
-ERROR(expected_semicolon, "expected semicolon")
-ERROR(expected_colon, "expected colon")
+ERROR(expected_semicolon, "expected ';'")
+ERROR(expected_colon, "expected ':'")
+ERROR(expected_left_parenthesis, "expected '('")
+ERROR(expected_right_parenthesis, "expected ')'")
 ERROR(expected_identifier, "expected identifier")
-ERROR(expected_keyword, "expected keyword")
-ERROR(unexpected_token, "unexpected token")
+ERROR(expected_keyword, "expected keyword '%0'")
+ERROR(expected_decl_or_end, "expected begin of a declarative item or end")
+ERROR(unexpected_token, "unexpected token '%0'")
+ERROR(wrong_selected_name_suffix, "suffix of a selected name must be a string, character, identifier or the keyword all")
 
 #ifndef DIAG_NO_UNDEF
 # if defined(DIAG)

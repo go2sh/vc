@@ -27,7 +27,3 @@ static const char *DiagnosticStrings[] = {
 const char *Diagnostic::getString() const {
   return DiagnosticStrings[(uint32_t)ID];
 };
-
-const SourceLocation Diagnostic::getLocation() const {
-  return Location;
-}

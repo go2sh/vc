@@ -23,6 +23,7 @@ void Parser::parseLibraryUnit() {
   default:
     DiagnosticBuilder D = Diag->diagnose(diag::unexpected_token);
     D.setLocation(Tok.getLocation());
+    D << Tok.getValue();
     consumeToken();
   }
 };
@@ -52,14 +53,25 @@ void Parser::parseEntityDecl() {
     parsePortClause();
   }
 
+parseEntityDecl:
   while (true) {
     break;
   }
 
   if (Tok.isNot(tok::kw_end)) {
-    std::cout << "decl or  expected end keyword." << std::endl;
-    return;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_decl_or_end);
+    D.setLocation(Tok.getLocation());
+
+    // Recover by searching for end keyword or semicolon for new decl
+    while (Tok.isNot(tok::kw_end, tok::semicolon, tok::eof)) consumeToken();
+
+    if (Tok.is(tok::eof)) {
+      return;
+    } else if (Tok.isNot(tok::kw_end)) {
+      goto parseEntityDecl;
+    }
   }
+  
   consumeToken(tok::kw_end);
 
   consumeIf(tok::kw_entity);
@@ -69,7 +81,8 @@ void Parser::parseEntityDecl() {
   }
 
   if (Tok.isNot(tok::semicolon)) {
-    std::cout << "expected semicolon" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+    D.setLocation(Tok.getLocation());
     return;
   };
   consumeToken();
@@ -79,25 +92,29 @@ void Parser::parseArchitectureDecl() {
   consumeToken(tok::kw_architecture);
 
   if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "expected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+    D.setLocation(Tok.getLocation());
     return;
   };
   consumeToken();
 
   if (Tok.isNot(tok::kw_of)) {
-    std::cout << "expected of keyword." << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword); 
+    D.setLocation(Tok.getLocation());
     return;
   }
   consumeToken(tok::kw_of);
 
   if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
-    std::cout << "expected identifier" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+    D.setLocation(Tok.getLocation());
     return;
   };
   consumeToken();
 
   if (Tok.isNot(tok::kw_is)) {
-    std::cout << "expected is keyword." << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword);
+    D.setLocation(Tok.getLocation());
     return;
   }
   consumeToken(tok::kw_is);
@@ -138,7 +155,8 @@ void Parser::parseArchitectureDecl() {
   }
 
   if (Tok.isNot(tok::semicolon)) {
-    std::cout << "expected semicolon" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+    D.setLocation(Tok.getLocation());
     return;
   };
   consumeToken();

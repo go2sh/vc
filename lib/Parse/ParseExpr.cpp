@@ -2,6 +2,7 @@
 
 #include "AST/Expr.h"
 #include "Parse/Parser.h"
+#include "Parse/DiagnosticsParse.h"
 
 using namespace vc;
 
@@ -36,12 +37,14 @@ Expr *Parser::parsePrimaryExpr() {
     consumeToken();
     R = parseExpr();
     if (Tok.isNot(tok::right_parenthesis)) {
-      std::cout << "expected )" << std::endl;
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_right_parenthesis);
+      D.setLocation(Tok.getLocation());
     }
     consumeToken();
     break;
   default:
-    std::cout << "unexpected token" << std::endl;
+    DiagnosticBuilder D = Diag->diagnose(diag::unexpected_token);
+    D.setLocation(Tok.getLocation());
   }
   return R;
 }
