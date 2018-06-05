@@ -1,4 +1,5 @@
 add_library(vc
+#    Support/StringMap.cpp
     Common/MemoryBuffer.cpp
     Common/SourceManager.cpp
     Common/CharInfo.cpp

@@ -13,6 +13,9 @@ MemoryBuffer *Detail::ContentCache::getBuffer() {
   return Buffer;
 }
 
+SourceFile SourceManager::createSourceFile(std::unique_ptr<MemoryBuffer> Buffer) {
+  Detail::ContentCache *Entry = new Detail::ContentCache();
+}
 SourceFile SourceManager::createSourceFile(const std::string &Path) {
   Detail::ContentCache *Entry = new Detail::ContentCache(Path);
   FileCache.push_back(Entry);

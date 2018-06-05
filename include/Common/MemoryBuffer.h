@@ -23,9 +23,11 @@ public:
   }
 
   void init(const char *BufferStart, const char *BufferEnd);
+  void init(const char *BufferStart, std::size_t Size);
 
 public:
   static std::unique_ptr<MemoryBuffer> getFile(const std::string &Filename);
+  static std::unique_ptr<MemoryBuffer> getSTDIN();
 };
 
 } // namespace vc

@@ -10,6 +10,7 @@ class Status {
 public:
   Status() {}
   Status(const boost::filesystem::path &Path) {
+    // Handle Filenames with a trailing slash and
     if (Path.filename_is_dot()) {
       auto It = Path.rbegin();
       It++;

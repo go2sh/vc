@@ -12,12 +12,20 @@ class ContentCache {
   std::string Path;
 
 public:
+  ContentCache() : Buffer(nullptr) {}
   ContentCache(const std::string &Path) : Buffer(nullptr), Path(Path) {}
   MemoryBuffer *getBuffer();
   std::string getPath() { return Path;}
 
 private:
   void setBuffer(MemoryBuffer *Buf) { Buffer = Buf; }
+  void replaceBuffer(MemoryBuffer *Buf) {
+    if (Buffer) {
+      delete Buffer;
+    }
+
+    Buffer = Buf;
+  }
 };
 } // namespace Detail
 
