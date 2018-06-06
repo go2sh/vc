@@ -67,8 +67,8 @@ uint32_t vc::validateUTF8(const char *&Ptr, const char *End) {
 Lexer::Lexer(DiagnosticEngine &Diag, SourceLocation FileLocation,
              const MemoryBuffer *Buffer)
     : Diag(&Diag), FileLocation(FileLocation) {
-  BufferStart = Buffer->getBufferStart();
-  BufferEnd = Buffer->getBufferEnd();
+  BufferStart = Buffer->getStart();
+  BufferEnd = Buffer->getEnd();
   TokenStart = BufferStart;
   CurrentPtr = BufferStart;
   isAtNewline = true;

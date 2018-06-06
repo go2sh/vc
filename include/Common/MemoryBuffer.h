@@ -9,25 +9,44 @@
 namespace vc {
 
 class MemoryBuffer {
-private:
   const char *BufferStart = nullptr;
   const char *BufferEnd = nullptr;
 
 public:
-  const char *getBufferStart() const { return BufferStart; }
-  const char *getBufferEnd() const { return BufferEnd; }
-  std::size_t getBufferSize() const { return BufferEnd - BufferStart; }
+  virtual ~MemoryBuffer();
 
-  StringRef getBuffer() const {
-    return StringRef(BufferStart, getBufferSize());
-  }
+  const char *getStart() const { return BufferStart; }
+  const char *getEnd() const { return BufferEnd; }
+  std::size_t getSize() const { return BufferEnd - BufferStart; }
 
+  virtual StringRef getIdentifier() { return "<invalid buffer>"; }
+
+  StringRef getBuffer() const { return StringRef(BufferStart, getSize()); }
+
+protected:
   void init(const char *BufferStart, const char *BufferEnd);
-  void init(const char *BufferStart, std::size_t Size);
 
 public:
   static std::unique_ptr<MemoryBuffer> getFile(const std::string &Filename);
   static std::unique_ptr<MemoryBuffer> getSTDIN();
+};
+
+class DefaultMemoryBuffer : public MemoryBuffer {
+
+public:
+  using MemoryBuffer::getEnd;
+  using MemoryBuffer::getSize;
+  using MemoryBuffer::getStart;
+
+  char *getStart() { return const_cast<char *>(MemoryBuffer::getStart()); }
+  char *getEnd() { return const_cast<char *>(MemoryBuffer::getEnd()); }
+
+  virtual StringRef getIdentifier() { return StringRef(reinterpret_cast<const char *>(this + 1)); }
+
+  void operator delete(void *p) { ::operator delete(p); }
+
+  static std::unique_ptr<DefaultMemoryBuffer>
+  createMemoryBuffer(std::size_t Size, const std::string &Identifier);
 };
 
 } // namespace vc

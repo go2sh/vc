@@ -14,17 +14,22 @@ class ContentCache {
 public:
   ContentCache() : Buffer(nullptr) {}
   ContentCache(const std::string &Path) : Buffer(nullptr), Path(Path) {}
+  
+  virtual ~ContentCache();
+  
   MemoryBuffer *getBuffer();
-  std::string getPath() { return Path;}
+  std::string getPath() { return Buffer->getIdentifier();}
 
-private:
-  void setBuffer(MemoryBuffer *Buf) { Buffer = Buf; }
-  void replaceBuffer(MemoryBuffer *Buf) {
+  void replaceBuffer(MemoryBuffer *NewBuffer) {
+    // We own the buffer so delete it, when exchagened
+    if (Buffer == NewBuffer) {
+      assert(0 && "Try to replace with the same buffer.");
+      return;
+    }
     if (Buffer) {
       delete Buffer;
     }
-
-    Buffer = Buf;
+    Buffer = NewBuffer;
   }
 };
 } // namespace Detail
@@ -36,6 +41,7 @@ public:
   SourceManager() { FileCache.push_back(nullptr); };
 
   SourceFile createSourceFile(const std::string &Path);
+  SourceFile createSourceFile(std::unique_ptr<MemoryBuffer> Buffer);
 
   MemoryBuffer *getBuffer(SourceFile File);
   std::pair<SourceFile, unsigned> getDecomposedLocation(SourceLocation);
