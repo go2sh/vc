@@ -87,6 +87,16 @@ inline static bool IsGraphicCharacter(uint8_t Char) {
     return (CharInfo[Char] & CHAR_GRAPHIC) != 0;
 }
 
+inline static bool IsVerticalWhitespace(uint8_t Char) {
+  using namespace charinfo;
+  return (CharInfo[Char] & CHAR_VWSPACE) != 0;
+}
+
+inline static bool IsHorizontalWhitespace(uint8_t Char) {
+  using namespace charinfo;
+  return (CharInfo[Char] & CHAR_HWSPACE) != 0;
+}
+
 } // namespace vc
 
 #endif

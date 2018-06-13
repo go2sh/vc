@@ -1,5 +1,8 @@
 add_library(vc
 #    Support/StringMap.cpp
+    Format/Format.cpp
+    Format/FormatToken.cpp
+    Format/FormatTokenLexer.cpp
     Common/MemoryBuffer.cpp
     Common/SourceManager.cpp
     Common/CharInfo.cpp
