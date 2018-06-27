@@ -66,6 +66,22 @@ public:
   void parsePortClause();
   void parseGenericClause();
 
+  void parseIdentifierList();
+  void parseInterfaceSignalDeclaration();
+  void parseInterfaceVariableDeclaration();
+  void parseInterfaceConstantDeclaration();
+  void parseInterfaceFileDeclaration();
+  void parseInterfaceTypeDeclaration();
+  void parseInterfaceSubprogramDeclaration();
+  void parseInterfacePackageDeclaration();
+  void parsePortInterfaceList();
+  void parseGenericInterfaceList();
+  void parseParameterInterfaceList();
+
+  void parseAssociationList();
+  
+  void parseGenericMapAspect(bool isInterface = false);
+
   Decl *parseSignalDecl(bool Interface = false);
   Decl *parseSubtypeDecl();
   Decl *parseTypeDecl();

@@ -33,8 +33,8 @@ class Lexer {
   Token NextToken;
 
 public:
-  Lexer(DiagnosticEngine &Diag, SourceLocation FileLocation,
-        const MemoryBuffer *Buffer);
+  Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer);
+  Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer, DiagnosticEngine &Diag);
 
   void lex(Token &Result);
   void restoreToken(Token &T) { TokenStart = T.getValue().data(); };

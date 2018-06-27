@@ -23,6 +23,8 @@ SourceFile SourceManager::createSourceFile(std::unique_ptr<MemoryBuffer> Buffer)
   Detail::ContentCache *Entry = new Detail::ContentCache();
   Entry->replaceBuffer(Buffer.release());
   FileCache.push_back(Entry);
+  LocationCache.push_back(SourceLocation::fromRawEncoding(LastSourceLocation + 1));
+  LastSourceLocation += Entry->getBuffer()->getSize();
   
   return SourceFile::fromRawEncoding(FileCache.size() - 1);
 }
@@ -30,6 +32,8 @@ SourceFile SourceManager::createSourceFile(std::unique_ptr<MemoryBuffer> Buffer)
 SourceFile SourceManager::createSourceFile(const std::string &Path) {
   Detail::ContentCache *Entry = new Detail::ContentCache(Path);
   FileCache.push_back(Entry);
+  LocationCache.push_back(SourceLocation::fromRawEncoding(LastSourceLocation + 1));
+  LastSourceLocation += Entry->getBuffer()->getSize();
 
   return SourceFile::fromRawEncoding(FileCache.size() - 1);
 }
@@ -40,7 +44,12 @@ std::pair<SourceFile, unsigned> SourceManager::getDecomposedLocation(SourceLocat
     return std::pair<SourceFile, unsigned>(SourceFile::fromRawEncoding(1), Loc.getRawEnconding() - 1);
 }
 
-MemoryBuffer *SourceManager::getBuffer(SourceFile File) {
+SourceLocation SourceManager::getStartOfFile(SourceFile SFile) const {
+  assert(SFile.ID > 0 && SFile.ID < LocationCache.size());
+  return LocationCache[SFile.ID];
+}
+
+MemoryBuffer *SourceManager::getBuffer(SourceFile File) const {
   Detail::ContentCache *Cache = FileCache[File.ID];
   return Cache->getBuffer();
 }

@@ -9,8 +9,18 @@
 
 using namespace vc;
 
-Lexer::Lexer(DiagnosticEngine &Diag, SourceLocation FileLocation,
-             const MemoryBuffer *Buffer)
+Lexer::Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer)
+    : FileLocation(FileLocation) {
+  BufferStart = Buffer->getStart();
+  BufferEnd = Buffer->getEnd();
+  TokenStart = BufferStart;
+  CurrentPtr = BufferStart;
+  isAtNewline = true;
+  hasWhitespacePrefix = false;
+}
+
+Lexer::Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer,
+             DiagnosticEngine &Diag)
     : Diag(&Diag), FileLocation(FileLocation) {
   BufferStart = Buffer->getStart();
   BufferEnd = Buffer->getEnd();

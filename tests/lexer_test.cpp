@@ -30,7 +30,7 @@ int main(int argc, char ** argv) {
     DiagnosticEngine Engine;
     StdConsumer Consumer(SrcMgr);
     Engine.addConsumer(&Consumer);
-    Lexer lexer(Engine, Loc, SrcMgr.getBuffer(File));
+    Lexer lexer(SrcMgr.getStartOfFile(File), SrcMgr.getBuffer(File), Engine);
     Parser P(Engine, &lexer);
     P.parseDesignFile();
     

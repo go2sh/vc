@@ -35,11 +35,10 @@ int main(int argc, char **argv) {
 
   SourceManager SrcMgr;
   SourceFile File = SrcMgr.createSourceFile(std::move(MemBuf));
-  SourceLocation Loc = SourceLocation::fromRawEncoding(1);
   DiagnosticEngine Engine;
   StdConsumer Consumer(SrcMgr);
   Engine.addConsumer(&Consumer);
-  Lexer lexer(Engine, Loc, SrcMgr.getBuffer(File));
+  Lexer lexer(SrcMgr.getStartOfFile(File), SrcMgr.getBuffer(File), Engine);
 
   Token Result;
   do {

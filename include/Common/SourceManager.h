@@ -14,11 +14,11 @@ class ContentCache {
 public:
   ContentCache() : Buffer(nullptr) {}
   ContentCache(const std::string &Path) : Buffer(nullptr), Path(Path) {}
-  
+
   virtual ~ContentCache();
-  
+
   MemoryBuffer *getBuffer();
-  std::string getPath() { return Buffer->getIdentifier();}
+  std::string getPath() { return Buffer->getIdentifier(); }
 
   void replaceBuffer(MemoryBuffer *NewBuffer) {
     // We own the buffer so delete it, when exchagened
@@ -36,15 +36,22 @@ public:
 
 class SourceManager {
   std::vector<Detail::ContentCache *> FileCache;
+  std::vector<SourceLocation> LocationCache;
+  unsigned LastSourceLocation = 0;
 
 public:
-  SourceManager() { FileCache.push_back(nullptr); };
+  SourceManager() {
+    FileCache.push_back(nullptr);
+    LocationCache.push_back(SourceLocation());
+  };
 
   SourceFile createSourceFile(const std::string &Path);
   SourceFile createSourceFile(std::unique_ptr<MemoryBuffer> Buffer);
 
-  MemoryBuffer *getBuffer(SourceFile File);
+  MemoryBuffer *getBuffer(SourceFile File) const;
   std::pair<SourceFile, unsigned> getDecomposedLocation(SourceLocation);
+
+  SourceLocation getStartOfFile(SourceFile SFile) const;
 
   uint32_t getColumnNumber(SourceFile File, uint32_t Offset);
   uint32_t getLineNumber(SourceFile File, uint32_t Offset);

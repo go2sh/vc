@@ -63,7 +63,8 @@ parseEntityDecl:
     D.setLocation(Tok.getLocation());
 
     // Recover by searching for end keyword or semicolon for new decl
-    while (Tok.isNot(tok::kw_end, tok::semicolon, tok::eof)) consumeToken();
+    while (Tok.isNot(tok::kw_end, tok::semicolon, tok::eof))
+      consumeToken();
 
     if (Tok.is(tok::eof)) {
       return;
@@ -71,7 +72,7 @@ parseEntityDecl:
       goto parseEntityDecl;
     }
   }
-  
+
   consumeToken(tok::kw_end);
 
   consumeIf(tok::kw_entity);
@@ -99,7 +100,7 @@ void Parser::parseArchitectureDecl() {
   consumeToken();
 
   if (Tok.isNot(tok::kw_of)) {
-    DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword); 
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword);
     D.setLocation(Tok.getLocation());
     return;
   }
@@ -121,18 +122,18 @@ void Parser::parseArchitectureDecl() {
 
   bool parseDecl = true;
   while (parseDecl) {
-    switch(Tok.getKind()) {
-      case tok::kw_signal:
-        parseSignalDecl();
-        break;
-      case tok::kw_subtype:
-        parseSubtypeDecl();
-        break;
-      case tok::kw_type:
-        parseTypeDecl();
-        break;
-      default:
-        parseDecl = false;
+    switch (Tok.getKind()) {
+    case tok::kw_signal:
+      parseSignalDecl();
+      break;
+    case tok::kw_subtype:
+      parseSubtypeDecl();
+      break;
+    case tok::kw_type:
+      parseTypeDecl();
+      break;
+    default:
+      parseDecl = false;
     }
   }
 
@@ -162,10 +163,384 @@ void Parser::parseArchitectureDecl() {
   consumeToken();
 };
 
-void Parser::parsePortClause(){
+void Parser::parsePortClause() {
+  consumeToken(tok::kw_port);
 
+  if (Tok.isNot(tok::left_parenthesis)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_left_parenthesis);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken();
+  parsePortInterfaceList();
+  if (Tok.is(tok::semicolon)) {
+    // TODO: Superflicious semi
+  }
+  if (Tok.isNot(tok::right_parenthesis)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_right_parenthesis);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken();
+  if (Tok.isNot(tok::semicolon)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken();
 };
 
-void Parser::parseGenericClause(){
+void Parser::parseGenericClause() {
+  consumeToken(tok::kw_generic);
 
+  if (Tok.isNot(tok::left_parenthesis)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_left_parenthesis);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken(tok::left_parenthesis);
+
+  parseGenericInterfaceList();
+  if (Tok.is(tok::semicolon)) {
+    // TODO: Superflicious semi
+  }
+
+  if (Tok.isNot(tok::right_parenthesis)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_right_parenthesis);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken(tok::right_parenthesis);
+
+  if (Tok.isNot(tok::semicolon)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken(tok::semicolon);
 };
+
+void Parser::parseIdentifierList() {
+  do {
+    if (Tok.isAny(tok::basic_identifier, tok::extended_identifier)) {
+      consumeToken();
+    }
+  } while (consumeIf(tok::comma));
+}
+
+void Parser::parseInterfaceSignalDeclaration() {
+  consumeIf(tok::kw_signal);
+  parseIdentifierList();
+
+  if (Tok.isNot(tok::colon)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_colon);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken(tok::colon);
+
+  if (Tok.isAny(tok::kw_in, tok::kw_out, tok::kw_inout, tok::kw_buffer,
+                tok::kw_linkage)) {
+    consumeToken();
+  }
+
+  parseSubtypeIndication();
+
+  if (consumeIf(tok::kw_bus)) {
+  }
+  if (consumeIf(tok::variable_assignment)) {
+    parseExpr();
+  }
+}
+
+void Parser::parseInterfaceConstantDeclaration() {
+  consumeIf(tok::kw_constant);
+  parseIdentifierList();
+
+  if (Tok.isNot(tok::colon)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_colon);
+    D.setLocation(Tok.getLocation());
+    return;
+  }
+  consumeToken(tok::colon);
+
+  parseSubtypeIndication();
+  if (consumeIf(tok::variable_assignment)) {
+    parseExpr();
+  }
+}
+
+void Parser::parseInterfaceVariableDeclaration() {
+  consumeIf(tok::kw_variable);
+  parseIdentifierList();
+  if (Tok.isAny(tok::kw_in, tok::kw_out, tok::kw_inout, tok::kw_buffer,
+                tok::kw_linkage)) {
+    consumeToken();
+  }
+  parseSubtypeIndication();
+  if (consumeIf(tok::variable_assignment)) {
+    parseExpr();
+  }
+}
+
+void Parser::parseInterfaceFileDeclaration() {
+  consumeIf(tok::kw_file);
+  parseIdentifierList();
+  parseSubtypeIndication();
+}
+
+void Parser::parseInterfaceTypeDeclaration() {
+  consumeToken(tok::kw_type);
+
+  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+    DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
+    D.setLocation(Tok.getLocation());
+  }
+  consumeToken();
+}
+
+void Parser::parseInterfaceSubprogramDeclaration() {
+  bool isFunction = false;
+  bool hasParameters = false;
+
+  if (!consumeIf(tok::kw_procedure)) {
+    if (consumeIf(tok::kw_pure)) {
+
+    } else if (consumeIf(tok::kw_impure)) {
+    }
+
+    if (Tok.isNot(tok::kw_function)) {
+    }
+    consumeToken(tok::kw_function);
+  }
+
+  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+  }
+  consumeToken();
+
+  if (consumeIf(tok::kw_parameter)) {
+    hasParameters = true;
+  }
+  if (Tok.is(tok::left_parenthesis)) {
+    consumeToken(tok::left_parenthesis);
+    parseParameterInterfaceList();
+    if (Tok.isNot(tok::right_parenthesis)) {
+      // TODO: Right paranthesis
+    }
+  } else if (hasParameters) {
+    // TODO: No parameters with parameters
+  }
+
+  if (isFunction) {
+    if (Tok.isNot(tok::kw_return)) {
+    }
+    consumeToken(tok::kw_return);
+    parseName();
+  }
+}
+
+void Parser::parseInterfacePackageDeclaration() {
+  consumeToken(tok::kw_package);
+
+  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+  }
+  consumeToken();
+
+  if (Tok.isNot(tok::kw_is)) {
+  }
+  consumeToken(tok::kw_is);
+
+  if (Tok.isNot(tok::kw_new)) {
+  }
+  consumeToken(tok::kw_new);
+
+  parseName();
+  parseGenericMapAspect();
+}
+
+void Parser::parsePortInterfaceList() {
+  bool isListAtEnd = false;
+  do {
+    switch (Tok.getKind()) {
+    case tok::basic_identifier:
+    case tok::extended_identifier:
+    case tok::kw_signal:
+      parseInterfaceSignalDeclaration();
+      break;
+    case tok::kw_constant:
+    case tok::kw_variable:
+    case tok::kw_file:
+    case tok::kw_impure:
+    case tok::kw_pure:
+    case tok::kw_function:
+    case tok::kw_procedure:
+    case tok::kw_package:
+    case tok::kw_type: {
+      DiagnosticBuilder D = Diag->diagnose(diag::not_allowed_in_port_list);
+      D.setLocation(Tok.getLocation());
+    } break;
+    default: {
+      DiagnosticBuilder D = Diag->diagnose(diag::unexpected_token);
+      D << Tok.getValue();
+      D.setLocation(Tok.getLocation());
+    }
+    }
+
+    switch (Tok.getKind()) {
+    case tok::basic_identifier:
+    case tok::extended_identifier:
+    case tok::kw_signal: {
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+      D.setLocation(Tok.getLocation());
+    } break;
+    case tok::semicolon:
+      consumeToken(tok::semicolon);
+      break;
+    default:
+      isListAtEnd = true;
+    }
+
+  } while (!isListAtEnd);
+}
+
+void Parser::parseGenericInterfaceList() {
+  bool isListAtEnd = false;
+  do {
+    switch (Tok.getKind()) {
+    case tok::basic_identifier:
+    case tok::extended_identifier:
+    case tok::kw_constant:
+      parseInterfaceConstantDeclaration();
+      break;
+    case tok::kw_impure:
+    case tok::kw_pure:
+    case tok::kw_function:
+    case tok::kw_procedure:
+      parseInterfaceSubprogramDeclaration();
+      break;
+    case tok::kw_package:
+      parseInterfacePackageDeclaration();
+      break;
+    case tok::kw_type:
+      parseInterfaceTypeDeclaration();
+      break;
+    case tok::kw_signal:
+    case tok::kw_variable:
+    case tok::kw_file: {
+      DiagnosticBuilder D = Diag->diagnose(diag::not_allowed_in_port_list);
+      D.setLocation(Tok.getLocation());
+    } break;
+    default: {
+      DiagnosticBuilder D = Diag->diagnose(diag::unexpected_token);
+      D.setLocation(Tok.getLocation());
+    }
+    }
+
+    switch (Tok.getKind()) {
+    case tok::basic_identifier:
+    case tok::extended_identifier:
+    case tok::kw_signal: {
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+      D.setLocation(Tok.getLocation());
+    } break;
+    case tok::semicolon:
+      break;
+    default:
+      isListAtEnd = true;
+    }
+
+  } while (!isListAtEnd);
+}
+
+void Parser::parseParameterInterfaceList() {
+  bool isListAtEnd = false;
+  do {
+    switch (Tok.getKind()) {
+    case tok::basic_identifier:
+    case tok::extended_identifier:
+    case tok::kw_constant:
+      parseInterfaceConstantDeclaration();
+      break;
+    case tok::kw_impure:
+    case tok::kw_pure:
+    case tok::kw_function:
+    case tok::kw_procedure:
+      parseInterfaceSubprogramDeclaration();
+      break;
+    case tok::kw_package:
+      parseInterfacePackageDeclaration();
+      break;
+    case tok::kw_type:
+      parseInterfaceTypeDeclaration();
+      break;
+    case tok::kw_signal:
+    case tok::kw_variable:
+    case tok::kw_file: {
+      DiagnosticBuilder D = Diag->diagnose(diag::not_allowed_in_port_list);
+      D.setLocation(Tok.getLocation());
+    } break;
+    default: {
+      DiagnosticBuilder D = Diag->diagnose(diag::unexpected_token);
+      D.setLocation(Tok.getLocation());
+    }
+    }
+
+    switch (Tok.getKind()) {
+    case tok::basic_identifier:
+    case tok::extended_identifier:
+    case tok::kw_signal: {
+      DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
+      D.setLocation(Tok.getLocation());
+    } break;
+    case tok::semicolon:
+      break;
+    default:
+      isListAtEnd = true;
+    }
+
+  } while (!isListAtEnd);
+}
+void Parser::parseAssociationList() {
+  bool isListAtEnd = false;
+  do {
+    if (consumeIf(tok::kw_open)) {
+      goto ActualEnd;
+    } else if (consumeIf(tok::kw_inertial)) {
+      goto ParseActual;
+    }
+    parseExpr();
+
+    if (Tok.is(tok::arrow)) {
+      consumeToken();
+    }
+  ParseActual:
+    parseExpr();
+
+  ActualEnd:
+    // TODO: recover
+    if (!consumeIf(tok::comma)) {
+      isListAtEnd = true;
+    }
+
+  } while (!isListAtEnd);
+}
+
+void Parser::parseGenericMapAspect(bool isInterface) {
+  if (Tok.isNot(tok::kw_generic)) {
+  }
+  consumeToken(tok::kw_generic);
+
+  if (Tok.isNot(tok::kw_map)) {
+  }
+  consumeToken(tok::kw_map);
+
+  if (Tok.isNot(tok::left_parenthesis)) {
+  }
+  consumeToken(tok::left_parenthesis);
+
+  parseAssociationList();
+
+  if (Tok.isNot(tok::right_parenthesis)) {
+  }
+  consumeToken(tok::right_parenthesis);
+}

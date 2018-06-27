@@ -31,6 +31,7 @@ ERROR(expected_keyword, "expected keyword '%0'")
 ERROR(expected_decl_or_end, "expected begin of a declarative item or end")
 ERROR(unexpected_token, "unexpected token '%0'")
 ERROR(wrong_selected_name_suffix, "suffix of a selected name must be a string, character, identifier or the keyword all")
+ERROR(not_allowed_in_port_list,"'%0' not allowed in a port list")
 
 #ifndef DIAG_NO_UNDEF
 # if defined(DIAG)

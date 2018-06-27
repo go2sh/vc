@@ -48,6 +48,7 @@ class SourceRange {
   SourceLocation End;
 
 public:
+  SourceRange() {}
   SourceRange(SourceLocation Begin) : Begin(Begin), End(Begin) {}
   SourceRange(SourceLocation Begin, SourceLocation End)
       : Begin(Begin), End(End) {}
