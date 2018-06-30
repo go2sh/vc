@@ -22,8 +22,8 @@ class Lexer {
   const char *BufferEnd;
 
   // Lexer configuration
-  bool KeepComments;
-  bool KeepWhitespaces;
+  bool KeepComments = false;
+  bool KeepWhitespaces = false;
 
   // Lexer state
   const char *TokenStart;
@@ -34,12 +34,17 @@ class Lexer {
 
 public:
   Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer);
-  Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer, DiagnosticEngine &Diag);
+  Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer,
+        DiagnosticEngine &Diag);
 
   void lex(Token &Result);
   void restoreToken(Token &T) { TokenStart = T.getValue().data(); };
 
+  void setKeepWhitespaces(bool Keep) { KeepWhitespaces = Keep; }
+  void setKeepComments(bool Keep) { KeepComments = Keep; }
+
 private:
+  void lexToken();
   void lexIdentifier();
   void lexExtendedIdentifier();
 
@@ -60,7 +65,8 @@ private:
 
   void formToken(tok::TokenKind Kind) {
     NextToken.setKind(Kind);
-    NextToken.setValue(StringRef(TokenStart, (size_t)(CurrentPtr - TokenStart)));
+    NextToken.setValue(
+        StringRef(TokenStart, (size_t)(CurrentPtr - TokenStart)));
     NextToken.setLocation(FileLocation.getLocWithOffset(
         (uint32_t)(uintptr_t)(TokenStart - BufferStart)));
     TokenStart = CurrentPtr;

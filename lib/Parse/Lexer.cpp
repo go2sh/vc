@@ -31,6 +31,13 @@ Lexer::Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer,
 }
 
 void Lexer::lex(Token &Result) {
+  if (NextToken.isNot(tok::eof)) {
+    lexToken();
+  }
+  Result = NextToken;
+}
+
+void Lexer::lexToken() {
 LexToken:
   char Char = *(CurrentPtr++);
 
@@ -47,7 +54,8 @@ LexToken:
   case (char)0xA0: // NBSP
   case '\t':
     hasWhitespacePrefix = true;
-    skipWhitespace();
+    if (skipWhitespace())
+      return;
     goto LexToken;
 
   case '\v':
@@ -60,7 +68,8 @@ LexToken:
   case '\n':
     hasWhitespacePrefix = false;
     isAtNewline = true;
-    skipWhitespace();
+    if (skipWhitespace())
+      return;
     goto LexToken;
 
   case '0':

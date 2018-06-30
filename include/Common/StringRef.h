@@ -46,6 +46,11 @@ public:
   std::size_t find_if_not(std::function<bool(const char)> MatchFunc) const;
 
   /*
+   * Trim
+   */
+  StringRef rtrim(StringRef Chars) const;
+
+  /*
    * String functions
    */
   std::string str() const {

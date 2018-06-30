@@ -60,6 +60,7 @@ std::unique_ptr<MemoryBuffer> MemoryBuffer::getSTDIN() {
   std::vector<char> Buffer;
 
   //FIXME: Slow std implementation
+  std::noskipws(std::cin);
   std::copy(std::istream_iterator<char>(std::cin), std::istream_iterator<char>(),
             std::back_inserter(Buffer));
 

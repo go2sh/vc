@@ -20,6 +20,9 @@ struct FormatToken {
   /** Matching FormatToken, if this token is a parenthesis */
   FormatToken *MatchingParenthesis = nullptr;
 
+  /** Text of the token whithout trailing whitespaces */
+  StringRef TokenText;
+
   /** Level of nesting */
   unsigned NestingLevel = 0;
 
@@ -29,14 +32,14 @@ struct FormatToken {
   /** Force a linebreak before this Token */
   bool MustBreakBefore = false;
 
-  /** Number of spaces before this token
-   * 
-   * This value does not account for idention as this is handled in IndentionLevel.
-   */
-  unsigned SpacesBefore = 0;
+  /** New lines before current Token */
+  unsigned NewLinesBefore = 0;
 
   /** Range of whitespace characters before this token */
   SourceRange WhitespaceRange;
+
+  /** Column of the first char of this Token */
+  unsigned Column = 0;
 };
 } // namespace format
 } // namespace vc
