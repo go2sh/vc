@@ -1,3 +1,4 @@
 entity asd is
-constant äasd : integer := 0;
+constant asd : integer := 0;
+type asdf is range 0 to 5;
 end entity;

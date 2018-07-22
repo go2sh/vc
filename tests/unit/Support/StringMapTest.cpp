@@ -1,7 +1,5 @@
 #include <vector>
-
-#define CATCH_CONFIG_MAIN
-#include "catch.hpp"
+#include <catch2/catch.hpp>
 
 TEST_CASE( "vectors can be sized and resized", "[vector]" ) {
 

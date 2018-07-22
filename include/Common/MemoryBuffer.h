@@ -27,6 +27,8 @@ protected:
   void init(const char *BufferStart, const char *BufferEnd);
 
 public:
+  static std::unique_ptr<MemoryBuffer>
+  MemoryBuffer::getMemoryBuffer(StringRef Data, const std::string &Filename);
   static std::unique_ptr<MemoryBuffer> getFile(const std::string &Filename);
   static std::unique_ptr<MemoryBuffer> getSTDIN();
 };
@@ -41,7 +43,9 @@ public:
   char *getStart() { return const_cast<char *>(MemoryBuffer::getStart()); }
   char *getEnd() { return const_cast<char *>(MemoryBuffer::getEnd()); }
 
-  virtual StringRef getIdentifier() { return StringRef(reinterpret_cast<const char *>(this + 1)); }
+  virtual StringRef getIdentifier() {
+    return StringRef(reinterpret_cast<const char *>(this + 1));
+  }
 
   void operator delete(void *p) { ::operator delete(p); }
 

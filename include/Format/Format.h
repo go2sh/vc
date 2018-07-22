@@ -12,6 +12,8 @@ struct FormatStyle {
 
   unsigned TabSize;
   unsigned IndentionWidth;
+
+  unsigned ColumnLimit;
 };
 
 void reformat(const SourceManager &SrcMgr, SourceFile SF, const FormatStyle &Style);

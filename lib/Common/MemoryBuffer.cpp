@@ -39,6 +39,14 @@ DefaultMemoryBuffer::createMemoryBuffer(std::size_t Size,
 }
 
 std::unique_ptr<MemoryBuffer>
+MemoryBuffer::getMemoryBuffer(StringRef Data, const std::string &Filename) {
+  auto MemBuf = DefaultMemoryBuffer::createMemoryBuffer(0, Filename);
+  MemBuf->init(Data.data(), Data.data() + Data.size() - 1);
+
+  return std::move(MemBuf);
+}
+
+std::unique_ptr<MemoryBuffer>
 MemoryBuffer::getFile(const std::string &Filename) {
   std::ifstream InputFile(Filename.c_str(), std::ios::in | std::ios::binary);
   std::size_t Size;
@@ -59,10 +67,10 @@ MemoryBuffer::getFile(const std::string &Filename) {
 std::unique_ptr<MemoryBuffer> MemoryBuffer::getSTDIN() {
   std::vector<char> Buffer;
 
-  //FIXME: Slow std implementation
+  // FIXME: Slow std implementation
   std::noskipws(std::cin);
-  std::copy(std::istream_iterator<char>(std::cin), std::istream_iterator<char>(),
-            std::back_inserter(Buffer));
+  std::copy(std::istream_iterator<char>(std::cin),
+            std::istream_iterator<char>(), std::back_inserter(Buffer));
 
   auto MemBuf =
       DefaultMemoryBuffer::createMemoryBuffer(Buffer.size(), "<STDIN>");
