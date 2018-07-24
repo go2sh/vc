@@ -1,5 +1,7 @@
 #include <Common/MemoryBuffer.h>
 
+#include <optional>
+#include <memory>
 #include <boost/filesystem.hpp>
 
 namespace vc {
@@ -42,7 +44,9 @@ public:
 };
 
 namespace detail {
+class MemoryNode;
 class MemoryDirectory;
+
 }
 class MemoryFileSystem : public FileSystem{
   std::unique_ptr<detail::MemoryDirectory> Root;
@@ -56,6 +60,9 @@ public:
   virtual std::unique_ptr<File> getFile(const std::string &FileName);
   virtual Status getStatus(const std::string &FileName);
   virtual std::unique_ptr<MemoryBuffer> getBuffer(const std::string &FileName);
+private:
+  std::optional<detail::MemoryNode*> lookupNode(const std::string &Path);
+
 };
 } // namespace vfs
 } // namespace vc

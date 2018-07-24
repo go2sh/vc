@@ -29,6 +29,8 @@ class MemoryDirectory : public MemoryNode {
 public:
   MemoryDirectory(Status Stat) : MemoryNode(std::move(Stat)) {}
   virtual ~MemoryDirectory() = default;
+
+  std::optional<MemoryNode*> getChild(const std::string &Name);
 };
 } // namespace detail
 
@@ -60,7 +62,17 @@ MemoryFileSystem::getBuffer(const std::string &FileName) {
 }
 
 void MemoryFileSystem::addFile(const std::string &FileName, Status Stat,
-                               std::unique_ptr<MemoryBuffer> Buffer) {}
+                               std::unique_ptr<MemoryBuffer> Buffer) {
+  boost::filesystem::path FilePath(FileName);
 
+  for (auto PathElement : FilePath) {
+    PathElement.empty();
+  }
+}
+
+std::optional<detail::MemoryNode *>
+MemoryFileSystem::lookupNode(const std::string &Path) {
+  return nullptr;
+}
 } // namespace vfs
 } // namespace vc
