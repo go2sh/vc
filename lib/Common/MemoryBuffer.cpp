@@ -41,7 +41,7 @@ DefaultMemoryBuffer::createMemoryBuffer(std::size_t Size,
 std::unique_ptr<MemoryBuffer>
 MemoryBuffer::getMemoryBuffer(StringRef Data, const std::string &Filename) {
   auto MemBuf = DefaultMemoryBuffer::createMemoryBuffer(0, Filename);
-  MemBuf->init(Data.data(), Data.data() + Data.size() - 1);
+  MemBuf->init(Data.data(), Data.data() + Data.size());
 
   return std::move(MemBuf);
 }

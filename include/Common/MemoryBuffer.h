@@ -2,6 +2,7 @@
 #define VC_BASIC_MEMORY_BUFFER_H
 
 #include "Common/StringRef.h"
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -22,6 +23,11 @@ public:
   virtual StringRef getIdentifier() { return "<invalid buffer>"; }
 
   StringRef getBuffer() const { return StringRef(BufferStart, getSize()); }
+
+  friend bool operator==(const MemoryBuffer &LHS, const MemoryBuffer &RHS) {
+    return std::equal(LHS.getStart(), LHS.getEnd(), RHS.getStart(),
+                      RHS.getEnd());
+  }
 
 protected:
   void init(const char *BufferStart, const char *BufferEnd);
