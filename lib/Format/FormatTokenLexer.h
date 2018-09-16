@@ -15,7 +15,7 @@ class FormatTokenLexer {
   Lexer L;
   unsigned TrailingWhitespaces = 0;
   unsigned Column = 0;
-  const FormatStyle Style;
+  const FormatStyle &Style;
 
 public:
   FormatTokenLexer(const SourceManager &SManager, SourceFile SFile,

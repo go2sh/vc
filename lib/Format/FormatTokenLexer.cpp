@@ -1,6 +1,10 @@
 #include "FormatTokenLexer.h"
 using namespace vc::format;
 
+// void FormatTokenLexer::reset() {
+
+// }
+
 void FormatTokenLexer::lex(std::vector<FormatToken *> &Tokens) {
   do {
     Tokens.push_back(getFormatToken());
@@ -44,12 +48,15 @@ FormatToken *FormatTokenLexer::getFormatToken() {
 
     WhitespaceLength += FT->Tok.getValue().size();
     L.lex(FT->Tok);
-    FT->TokenText = FT->Tok.getValue();
   }
 
+  FT->TokenText = FT->Tok.getValue();
+  FT->Column = Column;
   FT->WhitespaceRange = SourceRange(
       WhitespaceStart, WhitespaceStart.getLocWithOffset(WhitespaceLength));
 
+  Column += FT->TokenText.length();
+  
   if (FT->Tok.is(tok::comment)) {
     StringRef UntrimmedText = FT->TokenText;
     FT->TokenText = UntrimmedText.rtrim(" \xA0\t\f\v");

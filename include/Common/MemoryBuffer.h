@@ -28,7 +28,7 @@ protected:
 
 public:
   static std::unique_ptr<MemoryBuffer>
-  MemoryBuffer::getMemoryBuffer(StringRef Data, const std::string &Filename);
+  getMemoryBuffer(StringRef Data, const std::string &Filename);
   static std::unique_ptr<MemoryBuffer> getFile(const std::string &Filename);
   static std::unique_ptr<MemoryBuffer> getSTDIN();
 };

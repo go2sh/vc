@@ -1,7 +1,7 @@
 #ifndef VC_FORMAT_FORMATTOKEN_H
 #define VC_FORMAT_FORMATTOKEN_H
-#include <Parse/Token.h>
 #include <Common/SourceLocation.h>
+#include <Parse/Token.h>
 
 namespace vc {
 namespace format {
@@ -40,6 +40,9 @@ struct FormatToken {
 
   /** Column of the first char of this Token */
   unsigned Column = 0;
+
+  bool is(tok::TokenKind Kind) { return Tok.is(Kind); }
+  bool isNot(tok::TokenKind Kind) { return Tok.isNot(Kind); }
 };
 } // namespace format
 } // namespace vc

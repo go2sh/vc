@@ -9,6 +9,7 @@ add_library(vc
     Format/Format.cpp
     Format/FormatToken.cpp
     Format/FormatTokenLexer.cpp
+    Format/FormatLineParser.cpp
     Common/TextBuffer.cpp
     Common/MemoryBuffer.cpp
     Common/SourceManager.cpp
