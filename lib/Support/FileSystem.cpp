@@ -30,6 +30,11 @@ public:
       : MemoryNode(std::move(Stat)), Buffer(std::move(Buffer)) {}
 
   MemoryBuffer *getBuffer() const { return Buffer.get(); }
+
+private:
+  void setBuffer(std::unique_ptr<MemoryBuffer> Buf) { Buffer = std::move(Buf); }
+  friend bool MemoryFileSystem::updateFile(const std::string &Name,
+                                           std::unique_ptr<MemoryBuffer> Buf);
 };
 
 class MemoryDirectory : public MemoryNode {
@@ -94,21 +99,24 @@ Status MemoryFileSystem::status(const std::string &FileName) {
                 -1);
 }
 
-void MemoryFileSystem::addFile(const std::string &FileName,
-                               const boost::filesystem::file_status &FileStatus,
-                               const boost::uintmax_t FileSize,
-                               std::unique_ptr<MemoryBuffer> Buffer) {
+bool MemoryFileSystem::addFile(const std::string &FileName,
+                               std::unique_ptr<MemoryBuffer> Buffer,
+                               std::optional<file_status> FileStatus) {
   boost::filesystem::path FilePath(FileName);
   boost::filesystem::path CurrentPath;
   detail::MemoryDirectory *CurrentDir = Root.get();
+
+  auto ActualFileStatus =
+      FileStatus.value_or(file_status(file_type::regular_file));
 
   for (auto PathIt = FilePath.begin(); PathIt != FilePath.end(); PathIt++) {
     auto Node = CurrentDir->getChild(PathIt->string());
     CurrentPath /= *PathIt;
     if (!Node) {
       if (std::next(PathIt, 1) == FilePath.end()) {
-        Status Stat(FileName, FileStatus, FileSize);
-        if (FileStatus.type() == boost::filesystem::file_type::directory_file) {
+        Status Stat(FileName, ActualFileStatus, Buffer->getSize());
+        if (ActualFileStatus.type() ==
+            boost::filesystem::file_type::directory_file) {
           CurrentDir->addChild(
               PathIt->string(),
               std::make_unique<detail::MemoryDirectory>(std::move(Stat)));
@@ -117,7 +125,6 @@ void MemoryFileSystem::addFile(const std::string &FileName,
                                std::make_unique<detail::MemoryFile>(
                                    std::move(Stat), std::move(Buffer)));
         }
-        return;
       }
 
       Status DirStat(CurrentPath.string(),
@@ -130,14 +137,42 @@ void MemoryFileSystem::addFile(const std::string &FileName,
     } else {
       if (auto *NextDir = dynamic_cast<detail::MemoryDirectory *>(*Node)) {
         if (std::next(PathIt, 1) == FilePath.end()) {
-          return;
+          return false;
         }
         CurrentDir = NextDir;
       } else {
-        return;
+        return false;
       }
     }
   }
+  return true;
+}
+
+bool MemoryFileSystem::updateFile(const std::string &FileName,
+                std::unique_ptr<MemoryBuffer> Buffer) {
+  boost::filesystem::path FilePath(FileName);
+  boost::filesystem::path CurrentPath;
+  detail::MemoryDirectory *CurrentDir = Root.get();
+
+  for (auto PathIt = FilePath.begin(); PathIt != FilePath.end(); PathIt++) {
+    auto Node = CurrentDir->getChild(PathIt->string());
+    CurrentPath /= *PathIt;
+    if (!Node) {
+      return false;
+    } else {
+      if (auto *NextDir = dynamic_cast<detail::MemoryDirectory *>(*Node)) {
+        if (std::next(PathIt, 1) == FilePath.end()) {
+          return false;
+        }
+        CurrentDir = NextDir;
+      } else {
+        auto *File = dynamic_cast<detail::MemoryFile *>(*Node);
+        File->setBuffer(std::move(Buffer));
+      }
+    }
+  }
+
+  return true;
 }
 
 std::optional<detail::MemoryNode *>

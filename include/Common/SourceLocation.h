@@ -41,6 +41,10 @@ public:
     Loc.ID = ID;
     return Loc;
   }
+
+  friend bool operator<(const SourceLocation &LHS, const SourceLocation &RHS) {
+    return LHS.ID < RHS.ID;
+  }
 };
 
 class SourceRange {
@@ -53,8 +57,8 @@ public:
   SourceRange(SourceLocation Begin, SourceLocation End)
       : Begin(Begin), End(End) {}
 
-  SourceLocation getBegin() { return Begin; }
-  SourceLocation getEnd() { return End; }
+  SourceLocation getBegin() const { return Begin; }
+  SourceLocation getEnd() const { return End; }
 
   void setBegin(SourceLocation Loc) { Begin = Loc; }
   void setEnd(SourceLocation Loc) { End = Loc; }

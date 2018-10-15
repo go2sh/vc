@@ -8,14 +8,13 @@ TEST_CASE("Basic MemoryFileSystem operations") {
   vc::vfs::MemoryFileSystem FS;
   std::unique_ptr<vc::MemoryBuffer> Buffer =
       vc::MemoryBuffer::getMemoryBuffer("Test Data.", "Test");
-  std::unique_ptr<vc::MemoryBuffer> DataBuffer = vc::MemoryBuffer::getMemoryBuffer("Test Data.", "Test");
-  std::size_t BufferSize = Buffer->getSize();
+  std::unique_ptr<vc::MemoryBuffer> DataBuffer =
+      vc::MemoryBuffer::getMemoryBuffer("Test Data.", "Test");
 
   SECTION("add file and get status") {
-    FS.addFile("testfile.txt",
+    FS.addFile("testfile.txt", std::move(Buffer),
                boost::filesystem::file_status(
-                   boost::filesystem::file_type::regular_file),
-               BufferSize, std::move(Buffer));
+                   boost::filesystem::file_type::regular_file));
     vc::vfs::Status Stat = FS.status("testfile.txt");
     CHECK(Stat.getType() == boost::filesystem::file_type::regular_file);
     CHECK(Stat.getSize() == 10);
@@ -23,10 +22,9 @@ TEST_CASE("Basic MemoryFileSystem operations") {
   }
 
   SECTION("add nested file and get status") {
-    FS.addFile("a/b/testfile.txt",
+    FS.addFile("a/b/testfile.txt", std::move(Buffer),
                boost::filesystem::file_status(
-                   boost::filesystem::file_type::regular_file),
-               BufferSize, std::move(Buffer));
+                   boost::filesystem::file_type::regular_file));
     vc::vfs::Status Stat = FS.status("a/b/testfile.txt");
     CHECK(Stat.getType() == boost::filesystem::file_type::regular_file);
     CHECK(Stat.getSize() == 10);
@@ -34,11 +32,20 @@ TEST_CASE("Basic MemoryFileSystem operations") {
   }
 
   SECTION("add file and get buffer") {
-    FS.addFile("testfile.txt",
+    FS.addFile("testfile.txt", std::move(Buffer),
                boost::filesystem::file_status(
-                   boost::filesystem::file_type::regular_file),
-               BufferSize, std::move(Buffer));
+                   boost::filesystem::file_type::regular_file));
     std::unique_ptr<vc::MemoryBuffer> FileBuffer = FS.getBuffer("testfile.txt");
     REQUIRE_THAT(FileBuffer.get(), Equals(DataBuffer.get()));
+  }
+
+  SECTION("update file and get buffer") {
+    std::unique_ptr<vc::MemoryBuffer> UpdateBuffer =
+      vc::MemoryBuffer::getMemoryBuffer("Update Data.", "Test");
+    std::unique_ptr<vc::MemoryBuffer> UpdateTestBuffer =
+      vc::MemoryBuffer::getMemoryBuffer("Update Data.", "Test");
+    CHECK(FS.addFile("testfile.txt", std::move(Buffer)) == true);
+    CHECK(FS.updateFile("testfile.txt", std::move(UpdateBuffer)) == true);
+    REQUIRE_THAT(FS.getBuffer("testfile.txt").get(), Equals(UpdateTestBuffer.get()));
   }
 }

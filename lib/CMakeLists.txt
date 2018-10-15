@@ -1,5 +1,6 @@
 add_library(vcSupport STATIC
     Support/FileSystem.cpp
+    Support/SourceEdit.cpp
 )
 target_include_directories(vcSupport PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(vcSupport ${Boost_LIBRARIES})
@@ -28,3 +29,5 @@ add_library(vc
     Parse/ParseDecl.cpp
     Parse/ParseUnit.cpp
 )
+
+add_subdirectory(Format)

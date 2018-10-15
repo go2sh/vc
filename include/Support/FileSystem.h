@@ -6,6 +6,8 @@
 
 namespace vc {
 namespace vfs {
+
+using namespace boost::filesystem;
 class Status {
   std::string FileName;
   boost::filesystem::file_status FileStatus;
@@ -57,11 +59,12 @@ class MemoryFileSystem : public FileSystem {
 public:
   MemoryFileSystem();
   ~MemoryFileSystem() override;
-  void addFile(
+  bool addFile(
       const std::string &FileName,
-      const boost::filesystem::file_status &FileStatus,
-      const boost::uintmax_t FileSize = -1,
-      std::unique_ptr<MemoryBuffer> Buffer = std::make_unique<MemoryBuffer>());
+      std::unique_ptr<MemoryBuffer> Buffer,
+      std::optional<file_status> FileStatus = std::nullopt);
+
+  bool updateFile(const std::string &FileName, std::unique_ptr<MemoryBuffer> Buffer);
 
   virtual std::unique_ptr<File> getFile(const std::string &FileName);
   virtual Status status(const std::string &FileName);

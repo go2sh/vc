@@ -54,7 +54,7 @@ void FormatLineParser::parseDesignFile() {
 }
 
 void FormatLineParser::parseEntityDecl() {
-  assert(CurrentToken.is(tok::kw_entity));
+  assert(CurrentToken->is(tok::kw_entity));
 
   // Consume tokens for entity decl start
   nextToken();
@@ -62,24 +62,24 @@ void FormatLineParser::parseEntityDecl() {
   nextToken();
   addFormatLine();
 
-  if (CurrentToken.is(tok::kw_generic)) {
+  if (CurrentToken->is(tok::kw_generic)) {
     // Consume port (
     nextToken();
     nextToken();
     parseInterfaceList();
-    if (CurrentToken.is(tok::right_parenthesis)) {
+    if (CurrentToken->is(tok::right_parenthesis)) {
       // Consume );
       nextToken();
       nextToken();
       addFormatLine();
     }
   }
-  if (CurrentToken.is(tok::kw_generic)) {
+  if (CurrentToken->is(tok::kw_generic)) {
     // Consume port (
     nextToken();
     nextToken();
     parseInterfaceList();
-    if (CurrentToken.is(tok::right_parenthesis)) {
+    if (CurrentToken->is(tok::right_parenthesis)) {
       // Consume );
       nextToken();
       nextToken();

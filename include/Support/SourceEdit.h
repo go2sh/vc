@@ -6,7 +6,6 @@
 #include <string>
 
 namespace vc {
-
 class SourceEdit {
   SourceRange Range;
   std::string Text;
@@ -17,16 +16,21 @@ public:
       : Range(Range), Text(Text) {}
   SourceEdit(SourceLocation Location, const std::string &Text)
       : Range(SourceRange(Location)), Text(Text) {}
+
+  friend bool operator<(const SourceEdit &LHS, const SourceEdit &RHS);
 };
 
 class SourceEdits {
   SourceFile File;
   std::set<SourceEdit> Edits;
 
+  using const_iterator = std::set<SourceEdit>::iterator;
+
 public:
   SourceEdits(SourceFile File) : File(File) {}
 
-  void addEdit(const SourceEdit &Edit) { Edits.insert(Edit); }
-}
+  void addEdit(const SourceEdit &Edit);
+};
 } // namespace vc
+
 #endif // !VC_SUPPORT_TEXTEDIT_H
