@@ -17,6 +17,7 @@ add_library(vc
     Common/CharInfo.cpp
     Common/TokenKinds.cpp
     Common/StringRef.cpp
+    Common/OperatorPrecedence.cpp
     Diag/Diagnostic.cpp
     Diag/DiagnosticEngine.cpp
     Parse/Token.cpp
