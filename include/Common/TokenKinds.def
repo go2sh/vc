@@ -57,7 +57,7 @@ DELIMITER(matching_inequal, "?/=")
 DELIMITER(matching_less, "?<")
 DELIMITER(matching_less_equal, "?<=")
 DELIMITER(matching_greater, "?>")
-DELIMITER(matching_greate_equal, "?>=")
+DELIMITER(matching_greater_equal, "?>=")
 DELIMITER(double_less, "<<")
 DELIMITER(double_greater, ">>")
 

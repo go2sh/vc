@@ -151,7 +151,7 @@ Expr *Parser::parseRelationExpr() {
   case tok::less:
   case tok::matching_equal:
   case tok::matching_inequal:
-  case tok::matching_greate_equal:
+  case tok::matching_greater_equal:
   case tok::matching_greater:
   case tok::matching_less_equal:
   case tok::matching_less:

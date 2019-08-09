@@ -54,7 +54,6 @@ LexToken:
   case ' ':
   case (char)0xA0: // NBSP
   case '\t':
-    hasWhitespacePrefix = true;
     if (skipWhitespace())
       return;
     goto LexToken;
@@ -67,8 +66,6 @@ LexToken:
     }
     [[fallthrough]];
   case '\n':
-    hasWhitespacePrefix = false;
-    isAtNewline = true;
     if (skipWhitespace())
       return;
     goto LexToken;
@@ -160,7 +157,7 @@ LexToken:
   case 's':
   case 'S':
     if (!IsBitStringBase(*CurrentPtr) || *(CurrentPtr + 1) != '"') {
-      lexIdentifier();
+      return lexIdentifier();
     }
     CurrentPtr += 2;
     return lexBitStringLiteral();
@@ -249,7 +246,7 @@ void Lexer::lexIdentifier() {
   bool wasUnderscore = false;
 
   while (CurrentPtr <= BufferEnd) {
-    char Char = *CurrentPtr++;
+    char Char = *CurrentPtr;
     if (IsLetterDigitUnderline(Char)) {
       if (Char == '_') {
         if (wasUnderscore) {
@@ -265,8 +262,8 @@ void Lexer::lexIdentifier() {
       } else {
         wasUnderscore = false;
       }
+      CurrentPtr++;
     } else {
-      CurrentPtr--;
       break;
     }
   }
@@ -469,7 +466,7 @@ void Lexer::lexCompoundDelimiter() {
     CurrentPtr++;
     TwoByteCompound('/', '=', tok::matching_inequal, tok::matching_equal);
     TwoByteCompound('<', '=', tok::matching_less_equal, tok::matching_less);
-    TwoByteCompound('>', '=', tok::matching_greate_equal,
+    TwoByteCompound('>', '=', tok::matching_greater_equal,
                     tok::matching_greater);
     if (*(CurrentPtr - 1) == '?') {
       formToken(tok::condition_conversion);
@@ -537,18 +534,12 @@ bool Lexer::skipMultilineComment() {
 bool Lexer::skipWhitespace() {
   bool SawNewline = false;
 
-  while (true) {
-    // skip all horizontal spaces
-    while (IsHorizontalWhitespace(*CurrentPtr)) {
-      CurrentPtr++;
+  // skip all spaces
+  while (IsHorizontalWhitespace(*CurrentPtr) ||
+         IsVerticalWhitespace(*CurrentPtr)) {
+    if (IsVerticalWhitespace(*CurrentPtr)) {
+      SawNewline = true;
     }
-
-    // Return at chars other than v_ws
-    if (!IsVerticalWhitespace(*CurrentPtr)) {
-      break;
-    }
-
-    SawNewline = true;
     CurrentPtr++;
   }
 
