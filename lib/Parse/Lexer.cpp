@@ -17,6 +17,7 @@ Lexer::Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer)
   CurrentPtr = BufferStart;
   isAtNewline = true;
   hasWhitespacePrefix = false;
+  RawMode = true;
 }
 
 Lexer::Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer,
@@ -252,10 +253,12 @@ void Lexer::lexIdentifier() {
     if (IsLetterDigitUnderline(Char)) {
       if (Char == '_') {
         if (wasUnderscore) {
-          DiagnosticBuilder D =
-              Diag->diagnose(diag::lex_consecutive_underline_identifier);
-          D.setLocation(FileLocation.getLocWithOffset(
-              (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1)));
+          if (!RawMode) {
+            DiagnosticBuilder D =
+                Diag->diagnose(diag::lex_consecutive_underline_identifier);
+            D.setLocation(FileLocation.getLocWithOffset(
+                (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1)));
+          }
         } else {
           wasUnderscore = true;
         }
@@ -319,8 +322,10 @@ void Lexer::lexInteger() {
       ;
     LastInvalid = FileLocation.getLocWithOffset(
         (uint32_t)(uintptr_t)(CurrentPtr - BufferStart - 1));
-    DiagnosticBuilder D = Diag->diagnose(diag::lex_integer_start_underline);
-    D.setLocation(FirstInvalid);
+    if (!RawMode) {
+      DiagnosticBuilder D = Diag->diagnose(diag::lex_integer_start_underline);
+      D.setLocation(FirstInvalid);
+    }
   }
 
   // Consume the rest of the digits and underlines
@@ -340,13 +345,17 @@ void Lexer::lexInteger() {
 
       // Check for trailing underlines
       if (IsNumeric(*CurrentPtr)) {
-        DiagnosticBuilder D =
-            Diag->diagnose(diag::lex_integer_consecutive_underline);
-        D.setLocation(FirstInvalid);
+        if (!RawMode) {
+          DiagnosticBuilder D =
+              Diag->diagnose(diag::lex_integer_consecutive_underline);
+          D.setLocation(FirstInvalid);
+        }
       } else {
-        DiagnosticBuilder D =
-            Diag->diagnose(diag::lex_integer_ending_underline);
-        D.setLocation(FirstInvalid);
+        if (!RawMode) {
+          DiagnosticBuilder D =
+              Diag->diagnose(diag::lex_integer_ending_underline);
+          D.setLocation(FirstInvalid);
+        }
       }
     }
   }
@@ -382,10 +391,12 @@ void Lexer::lexNumber() {
   // Every other character terminates the decimal literal
   if (IsLetter(*CurrentPtr) ||
       (*CurrentPtr == '/' && IsLetter(*(CurrentPtr + 1)))) {
-    DiagnosticBuilder D =
-        Diag->diagnose(diag::missing_seperator_decimal_identifier);
-    D.setLocation(FileLocation.getLocWithOffset(
-        (uint32_t)(uintptr_t)(CurrentPtr - BufferStart)));
+    if (!RawMode) {
+      DiagnosticBuilder D =
+          Diag->diagnose(diag::missing_seperator_decimal_identifier);
+      D.setLocation(FileLocation.getLocWithOffset(
+          (uint32_t)(uintptr_t)(CurrentPtr - BufferStart)));
+    }
   }
   formToken(tok::decimal_literal);
 }
@@ -502,12 +513,16 @@ bool Lexer::skipMultilineComment() {
   CurrentPtr++;
 
   while (true) {
+    if (*CurrentPtr == '\0') {
+      if (!RawMode) {
+        // TODO: Diag no end
+      }
+      break;
+    }
     if (*CurrentPtr == '*' && *(CurrentPtr + 1) == '/') {
       CurrentPtr += 2;
       break;
     }
-    // TODO: Check eof
-
     CurrentPtr++;
   }
 

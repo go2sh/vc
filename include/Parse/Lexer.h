@@ -24,6 +24,7 @@ class Lexer {
   // Lexer configuration
   bool KeepComments = false;
   bool KeepWhitespaces = false;
+  bool RawMode = false;
 
   // Lexer state
   const char *TokenStart;
