@@ -7,22 +7,18 @@
 using namespace vc;
 
 GapTextBuffer::GapTextBuffer(const char *Data, std::size_t Length) {
-  initBuffer(Data, Length);
-}
-
-GapTextBuffer::~GapTextBuffer() {
-  if (Buffer != nullptr) {
-    std::free(Buffer);
-  }
-}
-
-void GapTextBuffer::initBuffer(const char *Data, std::size_t Length) {
   Capacity = 2 * Length;
   Buffer = static_cast<char *>(std::malloc(Capacity));
   Size = Length;
   PreGap = Buffer;
   PostGap = Buffer + Length;
   std::memcpy(Buffer + Length, Data, Length);
+}
+
+GapTextBuffer::~GapTextBuffer() {
+  if (Buffer != nullptr) {
+    std::free(Buffer);
+  }
 }
 
 void GapTextBuffer::resizeBuffer() {

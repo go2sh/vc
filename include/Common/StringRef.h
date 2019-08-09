@@ -24,6 +24,16 @@ public:
 
   static const std::size_t npos = -1;
 
+  typedef const char *const_iterator;
+
+  /*
+   * Iterators
+   */
+  const_iterator begin() { return Data; }
+  const_iterator end() { return Data + Length; }
+  const_iterator cbegin() { return begin(); }
+  const_iterator cend() { return end(); }
+
   /*
    * std::string like functions
    */

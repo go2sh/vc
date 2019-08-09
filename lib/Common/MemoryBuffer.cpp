@@ -7,7 +7,33 @@
 #include <string>
 #include <vector>
 
+#include <boost/filesystem.hpp>
+
 using namespace vc;
+
+template <class MB>
+static std::unique_ptr<MB> getFileImpl(const std::string &Filename,
+                                    uint64_t FileSize = -1) {
+  boost::filesystem::file_status Status = boost::filesystem::status(Filename);
+
+  if (Status.type() != boost::filesystem::file_type::regular_file &&
+      Status.type() != boost::filesystem::file_type::block_file) {
+    throw std::invalid_argument("Must be a valid file.");
+  }
+
+  if (FileSize == -1) {
+    FileSize = boost::filesystem::file_size(Filename);
+  }
+
+  std::ifstream InputFile(Filename.c_str(), std::ios::in | std::ios::binary);
+
+  // Create buffer and read actual data
+  auto MemBuf = DefaultMemoryBuffer::createMemoryBuffer(FileSize, Filename);
+  InputFile.read(MemBuf->getStart(), FileSize);
+  InputFile.close();
+
+  return std::move(MemBuf);
+}
 
 MemoryBuffer::~MemoryBuffer() {}
 
@@ -48,20 +74,7 @@ MemoryBuffer::getMemoryBuffer(StringRef Data, const std::string &Filename) {
 
 std::unique_ptr<MemoryBuffer>
 MemoryBuffer::getFile(const std::string &Filename) {
-  std::ifstream InputFile(Filename.c_str(), std::ios::in | std::ios::binary);
-  std::size_t Size;
-
-  // Get input filesize
-  InputFile.seekg(0, std::ios::end);
-  Size = InputFile.tellg();
-  InputFile.seekg(0, std::ios::beg);
-
-  // Create buffer and read actual data
-  auto MemBuf = DefaultMemoryBuffer::createMemoryBuffer(Size, Filename);
-  InputFile.read(MemBuf->getStart(), Size);
-  InputFile.close();
-
-  return std::move(MemBuf);
+  return getFileImpl<MemoryBuffer>(Filename);
 }
 
 std::unique_ptr<MemoryBuffer> MemoryBuffer::getSTDIN() {

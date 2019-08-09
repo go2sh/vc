@@ -66,9 +66,9 @@ public:
 
   bool updateFile(const std::string &FileName, std::unique_ptr<MemoryBuffer> Buffer);
 
-  virtual std::unique_ptr<File> getFile(const std::string &FileName);
-  virtual Status status(const std::string &FileName);
-  virtual std::unique_ptr<MemoryBuffer> getBuffer(const std::string &FileName);
+  std::unique_ptr<File> getFile(const std::string &FileName);
+  Status status(const std::string &FileName) override;
+  std::unique_ptr<MemoryBuffer> getBuffer(const std::string &FileName) override;
 
 private:
   std::optional<detail::MemoryNode *> lookupNode(const std::string &Path);

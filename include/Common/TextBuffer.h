@@ -25,7 +25,6 @@ public:
   std::string text() const;
 
 private:
-  void initBuffer(const char *Data, std::size_t Length);
   void resizeBuffer();
 
   void moveGap(int Bytes);

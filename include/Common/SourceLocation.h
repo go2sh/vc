@@ -34,7 +34,7 @@ public:
     return Loc;
   }
 
-  uint32_t getRawEnconding() { return ID; }
+  uint32_t getRawEnconding() const { return ID; }
 
   static SourceLocation fromRawEncoding(uint32_t ID) {
     SourceLocation Loc;
@@ -62,6 +62,10 @@ public:
 
   void setBegin(SourceLocation Loc) { Begin = Loc; }
   void setEnd(SourceLocation Loc) { End = Loc; }
+
+  uint32_t length() const {
+    return End.getRawEnconding() - Begin.getRawEnconding();
+  }
 };
 } // namespace vc
 
