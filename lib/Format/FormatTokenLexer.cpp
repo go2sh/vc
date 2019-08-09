@@ -5,7 +5,7 @@ using namespace vc::format;
 
 // }
 
-void FormatTokenLexer::lex(std::vector<FormatToken *> &Tokens) {
+void FormatTokenLexer::lex() {
   do {
     Tokens.push_back(getFormatToken());
   } while (Tokens.back()->Tok.isNot(tok::eof));
@@ -14,17 +14,16 @@ void FormatTokenLexer::lex(std::vector<FormatToken *> &Tokens) {
 FormatToken *FormatTokenLexer::getFormatToken() {
   FormatToken *FT = new FormatToken();
   L.lex(FT->Tok);
-  FT->TokenText = FT->Tok.getValue();
 
   SourceLocation WhitespaceStart =
       FT->Tok.getLocation().getLocWithOffset(-TrailingWhitespaces);
-
   unsigned WhitespaceLength = 0;
   TrailingWhitespaces = 0;
+
   while (FT->Tok.is(tok::unknown)) {
     StringRef TokenText = FT->Tok.getValue();
-    for (std::size_t i = 0; i < TokenText.length(); i++) {
-      switch (TokenText[i]) {
+    for (const char C : TokenText) {
+      switch (C) {
       case '\n':
         FT->NewLinesBefore++;
         Column = 0;
@@ -35,7 +34,7 @@ FormatToken *FormatTokenLexer::getFormatToken() {
         Column = 0;
         break;
       case ' ':
-      case 0xA0:
+      case '\xA0':
         Column++;
         break;
       case '\t':
@@ -51,12 +50,15 @@ FormatToken *FormatTokenLexer::getFormatToken() {
   }
 
   FT->TokenText = FT->Tok.getValue();
-  FT->Column = Column;
+  FT->WhitespacePrefix =
+      StringRef(FT->Tok.getValue().data() - WhitespaceLength, WhitespaceLength);
   FT->WhitespaceRange = SourceRange(
       WhitespaceStart, WhitespaceStart.getLocWithOffset(WhitespaceLength));
 
-  Column += FT->TokenText.length();
-  
+  // FIXME: Multi-Byte chars break columns
+  FT->ColumnWidth = FT->TokenText.length();
+  Column += FT->ColumnWidth;
+
   if (FT->Tok.is(tok::comment)) {
     StringRef UntrimmedText = FT->TokenText;
     FT->TokenText = UntrimmedText.rtrim(" \xA0\t\f\v");

@@ -17,6 +17,8 @@ class FormatTokenLexer {
   unsigned Column = 0;
   const FormatStyle &Style;
 
+  std::vector<FormatToken*> Tokens;
+
 public:
   FormatTokenLexer(const SourceManager &SManager, SourceFile SFile,
                    const FormatStyle &Style)
@@ -26,7 +28,11 @@ public:
     L.setKeepComments(true);
   }
 
-  void lex(std::vector<FormatToken *> &Tokens);
+  void lex();
+
+  std::vector<FormatToken*> &getTokens() {
+    return Tokens;
+  }
 
 private:
   FormatToken *getFormatToken();

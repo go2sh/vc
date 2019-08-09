@@ -7,13 +7,15 @@ namespace vc {
 namespace format {
 struct FormatStyle {
 
-  enum UseTabsStyle { UTS_Never, UTS_ForIdention };
-  UseTabsStyle IndentionChar;
+  enum struct UseTabsStyle { Never, ForIdention };
+  UseTabsStyle UseTabs = UseTabsStyle::Never;
 
-  unsigned TabSize;
-  unsigned IndentionWidth;
+  unsigned TabSize = 4;
+  unsigned IndentionWidth = 2;
 
-  unsigned ColumnLimit;
+  unsigned ColumnLimit = 80;
+
+  unsigned MaxEmptyLines = 1;
 };
 
 void reformat(const SourceManager &SrcMgr, SourceFile SF, const FormatStyle &Style);

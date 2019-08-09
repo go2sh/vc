@@ -2,6 +2,7 @@
 #define VC_FORMAT_FORMATLINEPARSER_H
 
 #include "FormatToken.h"
+#include <Common/OperatorPrecedence.h>
 #include <Format/Format.h>
 
 #include <memory>
@@ -14,43 +15,56 @@ namespace format {
 struct FormatLine {
   /// List of FormatTokens
   std::vector<FormatToken *> Tokens;
-  /// List of children
-  /// Children lines are lines, that are contained by the block denoted by this
-  /// line.
-  std::vector<FormatLine *> Children;
   /// Indention Level
-  unsigned Level;
+  unsigned Level = 0;
+  bool isFirst;
 };
 
 class FormatLineParser {
   const FormatStyle &Style;
 
-  std::vector<FormatToken *> *Tokens;
+  const std::vector<FormatToken *> &Tokens;
   FormatToken *CurrentToken;
   std::unique_ptr<FormatLine> Line;
   std::vector<FormatLine *> Lines;
-  std::vector<FormatLine *> *CurrentLines;
 
   unsigned Level = 0;
 
-  std::vector<FormatToken *>::iterator TokenIt;
+  bool MustBreakBeforeNextToken = false;
+
+  std::vector<FormatToken *>::const_iterator TokenIt;
   /// Parenthesis stack for parsing constructs with conflicting
   /// parentheses definitions like interfaces or instantiation
   std::vector<FormatToken *> ParenStack;
 
 public:
   FormatLineParser(const FormatStyle &Style, std::vector<FormatToken *> &Tokens)
-      : Style(Style), Tokens(&Tokens) {
+      : Style(Style), Tokens(Tokens) {
     Line = std::make_unique<FormatLine>();
-    CurrentLines = &Line->Children;
-    TokenIt = Tokens.begin();
+    Line->isFirst = true;
   }
+
+  ~FormatLineParser() {
+    for (auto Line : Lines) {
+      std::free(Line);
+    }
+  }
+
+  friend class LineLevelContext;
+  friend class ParenthesisContext;
+
+  std::vector<FormatLine *> &getLines() { return Lines; }
 
   void parse();
 
-  friend class FormatLineScopeState;
-
 private:
+  void readToken();
+  void nextToken();
+  void pushToken(FormatToken *Token);
+
+  void addFormatLine();
+  bool eof() { return CurrentToken->is(tok::eof); }
+
   void parseDesignFile();
   void parseDesignUnit();
 
@@ -59,12 +73,48 @@ private:
   void parseArchitectureDecl();
 
   void parseInterfaceList();
+  void parseGenericClause();
+  void parsePortClause();
 
-  FormatToken *nextToken() { return CurrentToken = *TokenIt++; }
+  /* Items */
+  void parseBlockDeclarativeItem();
 
-  void addToken(FormatToken *Token);
-  void addFormatLine();
-  bool eof() { return CurrentToken->is(tok::eof); }
+  void parseSubprogram();
+  void parseSubprogramBody();
+  void parseSubprogramInstantiation();
+
+  void parsePackage();
+  void parsePackageDeclaration();
+  void parsePackageBody();
+  void parsePackageInstantiation();
+
+  void parseTypeDeclaration();
+
+  void parseSubtypeDeclaration();
+  void parseConstantDeclaration();
+  void parseSignalDeclaration();
+  void parseVariableDeclaration();
+  void parseFileDeclaration();
+  void parseAliasDeclaration();
+  void parseComponentDeclaration();
+  void parseAttributeDeclaration();
+  void parseAttributeSpecification();
+  void parseConfigurationSpecification();
+  // TODO: Disconnect
+  void parseUseClause();
+  // TODO: Group
+  // TODO: PSL
+
+  /* Concurrent Statements */
+  void parseConcurrentStatement();
+
+  /* Sequential Statements */
+  void parseSequentialStatement();
+
+  /* Expr */
+  void parseName();
+  void parseExpression();
+  void parseListRangeIndex();
 };
 } // namespace format
 } // namespace vc
