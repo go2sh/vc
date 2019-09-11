@@ -1,6 +1,8 @@
 add_library(vcSupport STATIC
     Support/FileSystem.cpp
     Support/SourceEdit.cpp
+    $<$<PLATFORM_ID:Windows>:Support/ConfigFolders/ConfigFoldersWin32.cpp>
+    $<$<PLATFORM_ID:Linux>:Support/ConfigFolders/ConfigFoldersPosix.cpp>
 )
 target_include_directories(vcSupport PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(vcSupport ${Boost_LIBRARIES})
