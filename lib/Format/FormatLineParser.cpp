@@ -43,6 +43,28 @@ public:
     Parser.nextToken();
   }
 };
+
+class ScopedLineContext {
+  std::vector<FormatLine *> *OriginalLines;
+  std::unique_ptr<FormatLine> OriginalLine;
+  FormatLineParser &Parser;
+
+public:
+  ScopedLineContext(FormatLineParser &Parser) : Parser(Parser) {
+    OriginalLines = Parser.CurrentLines;
+    OriginalLine = std::move(Parser.Line);
+    Parser.CurrentLines = &OriginalLine->Tokens.back()->Children;
+    Parser.Line = std::unique_ptr<FormatLine>{new FormatLine()};
+  }
+
+  ~ScopedLineContext() {
+    if (!Parser.Line->Tokens.empty()) {
+      Parser.addFormatLine();
+    }
+    Parser.Line = std::move(OriginalLine);
+    Parser.CurrentLines = OriginalLines;
+  }
+};
 } // namespace format
 } // namespace vc
 
@@ -78,7 +100,7 @@ void FormatLineParser::addFormatLine() {
   if (Line->Tokens.empty())
     return;
   Line->Level = Level;
-  Lines.push_back(Line.release());
+  CurrentLines->push_back(Line.release());
 
   Line = std::make_unique<FormatLine>();
 }

@@ -27,6 +27,7 @@ class FormatLineParser {
   FormatToken *CurrentToken;
   std::unique_ptr<FormatLine> Line;
   std::vector<FormatLine *> Lines;
+  std::vector<FormatLine *> *CurrentLines;
 
   unsigned Level = 0;
 
@@ -42,16 +43,28 @@ public:
       : Style(Style), Tokens(Tokens) {
     Line = std::make_unique<FormatLine>();
     Line->isFirst = true;
+    CurrentLines = &Lines;
   }
 
   ~FormatLineParser() {
+    std::function<void(FormatLine*)> freeLine =
+        [&freeLine](FormatLine *Line) {
+          for (auto Tok : Line->Tokens) {
+            for (auto ChildLine : Tok->Children) {
+              freeLine(ChildLine);
+            }
+          }
+          std::free(Line);
+        };
+
     for (auto Line : Lines) {
-      std::free(Line);
+      freeLine(Line);
     }
   }
 
   friend class LineLevelContext;
   friend class ParenthesisContext;
+  friend class ScopedLineContext;
 
   std::vector<FormatLine *> &getLines() { return Lines; }
 

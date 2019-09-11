@@ -5,6 +5,9 @@
 
 namespace vc {
 namespace format {
+
+struct FormatLine;
+
 struct FormatToken {
   FormatToken() {}
 
@@ -19,6 +22,13 @@ struct FormatToken {
 
   /** Matching FormatToken, if this token is a parenthesis */
   FormatToken *MatchingParenthesis = nullptr;
+
+  /** Vector of FormatLines connected to this token
+   * 
+   * This is expecially used for interface lists and type
+   * definitions.
+   */
+  std::vector<FormatLine *> Children;
 
   /** Text of the token whithout trailing whitespaces */
   StringRef TokenText;
