@@ -90,24 +90,28 @@ private:
   void parsePortClause();
 
   /* Items */
-  void parseBlockDeclarativeItem();
+  void parseDeclarativeItem();
 
+  /* Subprogram */
   void parseSubprogram();
   void parseSubprogramBody();
   void parseSubprogramInstantiation();
 
+  /* package */
   void parsePackage();
   void parsePackageDeclaration();
   void parsePackageBody();
   void parsePackageInstantiation();
 
+  /* Types */
   void parseTypeDeclaration();
-
   void parseSubtypeDeclaration();
-  void parseConstantDeclaration();
-  void parseSignalDeclaration();
-  void parseVariableDeclaration();
-  void parseFileDeclaration();
+  void parsePhysicalTypeDefinition();
+  void parseArrayTypeDefinition();
+  void parseRecordTypeDefinition();
+
+  void parseObjectDeclaration();
+
   void parseAliasDeclaration();
   void parseComponentDeclaration();
   void parseAttributeDeclaration();
@@ -128,6 +132,11 @@ private:
   void parseName();
   void parseExpression();
   void parseListRangeIndex();
+  void parseRange();
+
+  /* Indication */
+  void parseSubtypeIndication();
+  void parseElementConstraint();
 };
 } // namespace format
 } // namespace vc

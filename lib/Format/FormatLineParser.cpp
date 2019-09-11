@@ -130,7 +130,6 @@ void FormatLineParser::parseDesignFile() {
     default:
       nextToken();
     }
-    nextToken();
   } while (!eof());
 
   // Push eof line
@@ -210,22 +209,24 @@ void FormatLineParser::parseArchitectureDecl() {
     nextToken();
   } while (CurrentToken->isNot(tok::kw_is));
   nextToken();
+  addFormatLine();
 
   // Declarations
   {
     LineLevelContext LineCtx{*this};
-    while (CurrentToken->isNot(tok::kw_begin)) {
-      parseBlockDeclarativeItem();
+    while (!eof() && CurrentToken->isNot(tok::kw_begin)) {
+      parseDeclarativeItem();
     }
   }
 
   // Begin
   nextToken();
+  addFormatLine();
 
   // Statements
   {
     LineLevelContext{*this};
-    while (CurrentToken->isNot(tok::kw_end)) {
+    while (!eof() && CurrentToken->isNot(tok::kw_end)) {
       parseConcurrentStatement();
     }
   }
@@ -237,38 +238,47 @@ void FormatLineParser::parseArchitectureDecl() {
     nextToken();
   }
   nextToken();
+  addFormatLine();
 }
 
 void FormatLineParser::parseInterfaceList() {
-  ParenStack.clear();
+  std::size_t InitialStackSize = ParenStack.size();
 
-  while (CurrentToken->isNot(tok::kw_end)) {
-    if (eof()) {
-      return;
-    }
-
-    // TODO: Add more elements (function, include type, package)
-    // TODO: add interface object parser
+  while (!eof() && CurrentToken->isNot(tok::kw_end)) {
     switch (CurrentToken->Tok.getKind()) {
-    case tok::left_parenthesis:
-      ParenStack.push_back(CurrentToken);
-      nextToken();
+    case tok::kw_constant:
+    case tok::kw_signal:
+    case tok::kw_variable:
+    case tok::kw_file:
+      parseObjectDeclaration();
       break;
+
+    case tok::kw_type:
+      parseTypeDeclaration();
+      break;
+
+    case tok::kw_pure:
+    case tok::kw_impure:
+    case tok::kw_function:
+    case tok::kw_procedure:
+      parseSubprogram();
+      break;
+
+    case tok::kw_package:
+      parsePackage();
+
     case tok::right_parenthesis:
-      if (!ParenStack.empty()) {
-        ParenStack.pop_back();
-        nextToken();
-      } else {
-        addFormatLine();
+      if (ParenStack.size() == InitialStackSize) {
         return;
       }
       break;
+
     case tok::semicolon:
       nextToken();
       addFormatLine();
-      ParenStack.clear();
       break;
-    // TODO: Recovery for missed ending
+      // TODO: Recovery for missed ending
+
     default:
       nextToken();
     }
@@ -276,24 +286,21 @@ void FormatLineParser::parseInterfaceList() {
 }
 
 void FormatLineParser::parseGenericClause() {
-  if (CurrentToken->is(tok::kw_generic)) {
-    // Consume generic (
-    nextToken();
-    nextToken();
-    addFormatLine();
-
-    {
-      LineLevelContext LineCtx(*this);
-      parseInterfaceList();
-    }
-
-    if (CurrentToken->is(tok::right_parenthesis)) {
-      // Consume );
-      nextToken();
-      nextToken();
-      addFormatLine();
-    }
+  if (!CurrentToken->is(tok::kw_generic)) {
+    return;
   }
+  nextToken();
+
+  {
+    ParenthesisContext ParenCtx(*this);
+    ScopedLineContext ScopeCtx(*this);
+    LineLevelContext LevelCtx(*this);
+
+    parseInterfaceList();
+  }
+
+  nextToken();
+  addFormatLine();
 }
 
 void FormatLineParser::parsePortClause() {
@@ -306,6 +313,7 @@ void FormatLineParser::parsePortClause() {
     {
       LineLevelContext LineCtx(*this);
       parseInterfaceList();
+      addFormatLine();
     }
 
     if (CurrentToken->is(tok::right_parenthesis)) {
@@ -317,7 +325,7 @@ void FormatLineParser::parsePortClause() {
   }
 }
 
-void FormatLineParser::parseBlockDeclarativeItem() {
+void FormatLineParser::parseDeclarativeItem() {
   switch (CurrentToken->Tok.getKind()) {
   case tok::kw_pure:
   case tok::kw_impure:
@@ -334,6 +342,27 @@ void FormatLineParser::parseBlockDeclarativeItem() {
   case tok::kw_subtype:
     parseSubtypeDeclaration();
     break;
+  case tok::kw_component:
+    parseComponentDeclaration();
+    break;
+  case tok::kw_shared:
+    nextToken();
+    [[fallthrough]];
+  case tok::kw_variable:
+  case tok::kw_signal:
+  case tok::kw_constant:
+  case tok::kw_file:
+    parseObjectDeclaration();
+    break;
+  // Fallback
+  case tok::semicolon:
+    nextToken();
+    addFormatLine();
+    break;
+  case tok::eof:
+    return;
+  default:
+    nextToken();
   }
 }
 
@@ -394,7 +423,7 @@ void FormatLineParser::parseSubprogramBody() {
   {
     LineLevelContext LineCtx{*this};
     while (CurrentToken->isNot(tok::kw_begin)) {
-      parseBlockDeclarativeItem(); // TODO: Custom
+      parseDeclarativeItem();
     }
   }
 
@@ -422,13 +451,103 @@ void FormatLineParser::parseSubprogramBody() {
 
 void FormatLineParser::parsePackage() {}
 
-void FormatLineParser::parseTypeDeclaration() {}
+void FormatLineParser::parseTypeDeclaration() {
+  nextToken();
+  nextToken();
+
+  if (CurrentToken->isNot(tok::kw_is)) {
+    return;
+  }
+  nextToken();
+
+  switch (CurrentToken->Tok.getKind()) {
+  case tok::kw_range:
+    nextToken();
+    parseExpression();
+    if (tok::kw_units) {
+      parsePhysicalTypeDefinition();
+    }
+    break;
+  case tok::left_parenthesis:
+    while (!eof() && CurrentToken->isNot(tok::right_parenthesis)) {
+      nextToken();
+    }
+    nextToken();
+    break;
+  case tok::kw_array:
+    parseArrayTypeDefinition();
+    break;
+  case tok::kw_record:
+    parseRecordTypeDefinition();
+  }
+}
 
 void FormatLineParser::parseSubtypeDeclaration() {}
 
-void FormatLineParser::parseConcurrentStatement() {}
+void FormatLineParser::parsePhysicalTypeDefinition() {}
 
-void FormatLineParser::parseSequentialStatement() {}
+void FormatLineParser::parseArrayTypeDefinition() {}
+
+void FormatLineParser::parseRecordTypeDefinition() {}
+
+void FormatLineParser::parseObjectDeclaration() {
+  if (CurrentToken->isAny(tok::kw_constant, tok::kw_signal, tok::kw_variable,
+                          tok::kw_file)) {
+    nextToken();
+  }
+
+  // Identifier list
+  nextToken();
+  while (!eof() && CurrentToken->is(tok::comma)) {
+    nextToken();
+    nextToken();
+  }
+
+  // Colon
+  nextToken();
+
+  // Direction
+  if (CurrentToken->isAny(tok::kw_in, tok::kw_out, tok::kw_inout,
+                          tok::kw_buffer, tok::kw_linkage)) {
+    nextToken();
+  }
+
+  parseSubtypeIndication();
+
+  // Signal mode or file mode
+  if (CurrentToken->isAny(tok::kw_register, tok::kw_bus)) {
+    nextToken();
+  } else if (CurrentToken->is(tok::kw_open)) {
+    parseExpression();
+  }
+
+  // File name or default value
+  if (CurrentToken->isAny(tok::variable_assignment, tok::kw_is)) {
+    parseExpression();
+  }
+}
+
+void FormatLineParser::parseConcurrentStatement() {
+  while (!eof() && CurrentToken->isNot(tok::semicolon)) {
+    if (CurrentToken->is(tok::kw_end)) {
+      return;
+    }
+    nextToken();
+  }
+  nextToken();
+  addFormatLine();
+}
+
+void FormatLineParser::parseSequentialStatement() {
+  while (!eof() && CurrentToken->isNot(tok::semicolon)) {
+    if (CurrentToken->is(tok::kw_end)) {
+      return;
+    }
+    nextToken();
+  }
+  nextToken();
+  addFormatLine();
+}
 
 void FormatLineParser::parseName() {
   while (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier,
@@ -522,11 +641,7 @@ void FormatLineParser::parseExpression() {
 }
 
 void FormatLineParser::parseListRangeIndex() {
-  while (CurrentToken->isNot(tok::right_parenthesis)) {
-    if (eof()) {
-      return;
-    }
-
+  while (!eof() && CurrentToken->isNot(tok::right_parenthesis)) {
     parseExpression();
     switch (CurrentToken->Tok.getKind()) {
     case tok::arrow:
@@ -540,5 +655,105 @@ void FormatLineParser::parseListRangeIndex() {
     default:
       return;
     }
+  }
+}
+
+void FormatLineParser::parseRange() {
+  parseExpression();
+
+  if (CurrentToken->isAny(tok::kw_to, tok::kw_downto)) {
+    nextToken();
+    parseExpression();
+  }
+}
+
+void FormatLineParser::parseSubtypeIndication() {
+  auto parseResolutionIndication = [this](auto &self) -> void {
+    if (ParenStack.size() > 50) {
+      throw false; // TODO;
+    }
+
+    // Consume single element function
+    if (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier)) {
+      parseName();
+    }
+
+    // Array or record resolution
+    if (CurrentToken->is(tok::left_parenthesis)) {
+      ParenthesisContext ParenCtx(*this);
+      bool Valid = true;
+
+      while (!eof() && CurrentToken->isNot(tok::right_parenthesis)) {
+        if (CurrentToken->isAny(tok::basic_identifier,
+                                tok::extended_identifier)) {
+          parseName();
+        }
+        self(self);
+        if (CurrentToken->is(tok::comma)) {
+          nextToken();
+        }
+      }
+    }
+  };
+
+  parseResolutionIndication(parseResolutionIndication);
+
+  // Try to parse the type mark
+  if (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier)) {
+    parseName();
+  }
+
+  if (CurrentToken->is(tok::kw_range)) {
+    nextToken();
+    parseRange();
+  } else {
+    parseElementConstraint();
+  }
+}
+
+enum class ElementContraintType { Unknown, Array, Record };
+void FormatLineParser::parseElementConstraint() {
+  ElementContraintType Type = ElementContraintType::Unknown;
+
+  if (CurrentToken->is(tok::left_parenthesis)) {
+    {
+      ParenthesisContext ParenCtx(*this);
+
+      if (CurrentToken->is(tok::kw_open)) {
+        nextToken();
+      } else if (CurrentToken->isAny(tok::basic_identifier,
+                              tok::extended_identifier)) {
+        bool SimpleName = parseName();
+        if (SimpleName) {
+          
+        }
+      }
+    }
+    if (Type == ElementContraintType::Array) {
+      parseElementConstraint();
+    }
+  }
+}
+
+void FormatLineParser::parseComponentDeclaration() {
+  nextToken();
+  nextToken();
+  if (CurrentToken->is(tok::kw_is)) {
+    nextToken();
+  }
+  addFormatLine();
+
+  {
+    LineLevelContext LineCtx(*this);
+    parseGenericClause();
+    parsePortClause();
+  }
+  while (!eof() && CurrentToken->isNot(tok::kw_end)) {
+    nextToken();
+  }
+  nextToken();
+  nextToken();
+  if (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier)) {
+    nextToken();
   }
 }
