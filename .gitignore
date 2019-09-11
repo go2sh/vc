@@ -31,3 +31,5 @@
 # Folders
 .vscode/
 build/
+
+__pycache__/

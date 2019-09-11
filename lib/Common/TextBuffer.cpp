@@ -46,7 +46,7 @@ std::string GapTextBuffer::text() const {
 
 void GapTextBuffer::insertText(std::size_t Offset, const char *Data,
                                std::size_t Length) {
-  assert(Offset < Size && "Offset out of range");
+  assert(Offset <= Size && "Offset out of range");
 
   if (Length == 0)
     return;

@@ -49,17 +49,16 @@ struct FormatToken {
   /** Number of columns needed to display this token */
   unsigned ColumnWidth = 0;
 
-  bool isFirstOnLine() const {
-    return Previous == nullptr;
-  }
+  bool isFirstOnLine() const { return Previous == nullptr; }
 
   bool is(tok::TokenKind Kind) { return Tok.is(Kind); }
   bool isNot(tok::TokenKind Kind) { return Tok.isNot(Kind); }
   template <typename... T> bool isNot(tok::TokenKind K1, T... K) {
     return Tok.isNot(K1, K...);
   };
-  template<typename... Ts>
-  bool isAny(Ts... Args) { return Tok.isAny(Args...);}
+  template <typename... Ts> bool isAny(Ts... Args) {
+    return Tok.isAny(Args...);
+  }
 };
 } // namespace format
 } // namespace vc
