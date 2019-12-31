@@ -2,12 +2,16 @@
 #define VC_BASIC_MEMORY_BUFFER_H
 
 #include "Common/StringRef.h"
+
 #include <algorithm>
+#include <filesystem>
 #include <iostream>
 #include <memory>
 #include <string>
 
 namespace vc {
+
+namespace fs = std::filesystem;
 
 class MemoryBuffer {
   const char *BufferStart = nullptr;

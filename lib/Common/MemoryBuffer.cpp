@@ -7,22 +7,22 @@
 #include <string>
 #include <vector>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 using namespace vc;
 
 template <class MB>
 static std::unique_ptr<MB> getFileImpl(const std::string &Filename,
                                     uint64_t FileSize = -1) {
-  boost::filesystem::file_status Status = boost::filesystem::status(Filename);
+  fs::file_status Status = fs::status(Filename);
 
-  if (Status.type() != boost::filesystem::file_type::regular_file &&
-      Status.type() != boost::filesystem::file_type::block_file) {
+  if (Status.type() != fs::file_type::regular &&
+      Status.type() != fs::file_type::block) {
     throw std::invalid_argument("Must be a valid file.");
   }
 
   if (FileSize == -1) {
-    FileSize = boost::filesystem::file_size(Filename);
+    FileSize = fs::file_size(Filename);
   }
 
   std::ifstream InputFile(Filename.c_str(), std::ios::in | std::ios::binary);
