@@ -609,29 +609,36 @@ void FormatLineParser::parseExpression() {
         if (Prec > PrecLevel) {
         }
         if (Prec < PrecLevel) {
-          if (!Line->Tokens.empty()) {
-            FormatToken *End = Line->Tokens.back();
-            End->ExpressionLevel--;
-          }
         }
-
       } else {
       }
 
     case tok::left_parenthesis: {
       ParenthesisContext ParenCtx(*this);
+      prec::Level OutsidePrecLevel = PrecLevel;
+      PrecLevel = prec::Unknown;
       parseExpression();
+      PrecLevel = OutsidePrecLevel;
       break;
     }
+
+    case tok::kw_to:
+    case tok::kw_downto:
+      // Handle range expression
+      PrecLevel = prec::Unknown;
+      IsLogicalUnary = true;
+      nextToken();
+      break;
 
     case tok::right_parenthesis:
     case tok::semicolon:
     case tok::kw_then:
     case tok::kw_loop:
     case tok::kw_generate:
-    case tok::kw_to:
-    case tok::kw_downto:
       // Stop parsing on unmatched parenthesis, semicolon and some keywords
+      if (CurrentToken->Previous) {
+        CurrentToken->Previous->FakeRParen;
+      }
       return;
 
     default:
@@ -655,15 +662,6 @@ void FormatLineParser::parseListRangeIndex() {
     default:
       return;
     }
-  }
-}
-
-void FormatLineParser::parseRange() {
-  parseExpression();
-
-  if (CurrentToken->isAny(tok::kw_to, tok::kw_downto)) {
-    nextToken();
-    parseExpression();
   }
 }
 
@@ -705,33 +703,15 @@ void FormatLineParser::parseSubtypeIndication() {
 
   if (CurrentToken->is(tok::kw_range)) {
     nextToken();
-    parseRange();
-  } else {
-    parseElementConstraint();
-  }
-}
-
-enum class ElementContraintType { Unknown, Array, Record };
-void FormatLineParser::parseElementConstraint() {
-  ElementContraintType Type = ElementContraintType::Unknown;
-
-  if (CurrentToken->is(tok::left_parenthesis)) {
-    {
-      ParenthesisContext ParenCtx(*this);
-
-      if (CurrentToken->is(tok::kw_open)) {
+    parseExpression();
+  } else if (CurrentToken->is(tok::left_parenthesis)) {
+    ParenthesisContext Paren(*this);
+    do {
+      parseExpression();
+      if (CurrentToken->is(tok::comma)) {
         nextToken();
-      } else if (CurrentToken->isAny(tok::basic_identifier,
-                              tok::extended_identifier)) {
-        bool SimpleName = parseName();
-        if (SimpleName) {
-          
-        }
       }
-    }
-    if (Type == ElementContraintType::Array) {
-      parseElementConstraint();
-    }
+    } while (CurrentToken->isNot(tok::right_parenthesis, tok::semicolon));
   }
 }
 

@@ -14,7 +14,6 @@ class FormatCalculator {
 public:
   FormatCalculator(const FormatStyle &Style) : Style(Style) {}
 
-
   void calculateFormatInformation(FormatLine &Line);
 
 private:

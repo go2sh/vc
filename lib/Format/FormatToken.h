@@ -8,6 +8,9 @@ namespace format {
 
 struct FormatLine;
 
+/**
+ * Contains the format information
+ */
 struct FormatToken {
   FormatToken() {}
 
@@ -24,7 +27,7 @@ struct FormatToken {
   FormatToken *MatchingParenthesis = nullptr;
 
   /** Vector of FormatLines connected to this token
-   * 
+   *
    * This is expecially used for interface lists and type
    * definitions.
    */
@@ -32,6 +35,12 @@ struct FormatToken {
 
   /** Text of the token whithout trailing whitespaces */
   StringRef TokenText;
+
+  /** Range of whitespace characters before this token */
+  SourceRange WhitespaceRange;
+
+  /** The whitespace text before this token. */
+  StringRef WhitespacePrefix;
 
   /** Force a linebreak before this Token */
   bool MustBreakBefore = false;
@@ -45,16 +54,14 @@ struct FormatToken {
   /** Spaces required before this token */
   unsigned SpacesRequiredBefore = 0;
 
-  /** Range of whitespace characters before this token */
-  SourceRange WhitespaceRange;
-
-  /** The whitespace text before this token. */
-  StringRef WhitespacePrefix;
-
-  /** Expression Level */
-  int ExpressionLevel = 0;
-
+  /** Number of parenthesis around the token */
   unsigned NestingLevel = 0;
+
+  /** Number of fake left parenthesis inserted from operator predecence */
+  unsigned FakeLParen = 0;
+
+  /** Number of fake right parenthesis */
+  unsigned FakeRParen = 0;
 
   /** Number of columns needed to display this token */
   unsigned ColumnWidth = 0;
