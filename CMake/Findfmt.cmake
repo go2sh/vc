@@ -25,7 +25,7 @@ if(NOT fmt_INCLUDE_DIR)
     ExternalProject_Get_Property(fmt-external install_dir)
     ExternalProject_Get_Property(fmt-external binary_dir)
     set (fmt_INCLUDE_DIR ${install_dir}/include)
-    set (fmt_LIBRARY ${install_dir}/${CMAKE_INSTALL_LIBDIR}/libfmt.a)
+    set (fmt_LIBRARY ${install_dir}/${CMAKE_INSTALL_LIBDIR}/fmtd${CMAKE_STATIC_LIBRARY_SUFFIX})
     add_dependencies(fmt fmt-external)
 endif()
 

@@ -5,12 +5,13 @@
 
 #include "Common/MemoryBuffer.h"
 #include "Common/SourceLocation.h"
+#include "Common/StringRef.h"
 #include "Diag/DiagnosticEngine.h"
 #include "Parse/Token.h"
 
 namespace vc {
 
-uint32_t validateUTF8(const char *&Ptr, const char *End);
+auto validateUTF8(const char *&Ptr, const char *End) -> uint32_t;
 
 class Lexer {
   // Diagnostics
@@ -44,6 +45,10 @@ public:
   void setKeepWhitespaces(bool Keep) { KeepWhitespaces = Keep; }
   void setKeepComments(bool Keep) { KeepComments = Keep; }
 
+  auto getStringRef() -> StringRef {
+    return StringRef(BufferStart, BufferEnd);
+  }
+
 private:
   void lexToken();
   void lexIdentifier();
@@ -60,9 +65,9 @@ private:
 
   void lexCompoundDelimiter();
 
-  bool skipSingleLineComment();
-  bool skipMultilineComment();
-  bool skipWhitespace();
+  auto skipSingleLineComment() -> bool;
+  auto skipMultilineComment() -> bool;
+  auto skipWhitespace() -> bool;
 
   void formToken(tok::TokenKind Kind) {
     NextToken.setKind(Kind);

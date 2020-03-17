@@ -11,8 +11,8 @@ void FormatTokenLexer::lex() {
   } while (Tokens.back()->Tok.isNot(tok::eof));
 }
 
-FormatToken *FormatTokenLexer::getFormatToken() {
-  FormatToken *FT = new FormatToken();
+auto FormatTokenLexer::getFormatToken() -> FormatToken * {
+  auto *FT = new FormatToken(); // NOLINT(cppcoreguidelines-owning-memory)
   L.lex(FT->Tok);
 
   SourceLocation WhitespaceStart =
@@ -50,7 +50,7 @@ FormatToken *FormatTokenLexer::getFormatToken() {
   }
 
   FT->TokenText = FT->Tok.getValue();
-  FT->WhitespacePrefix =
+  FT->WhitespacePrefix = 
       StringRef(FT->Tok.getValue().data() - WhitespaceLength, WhitespaceLength);
   FT->WhitespaceRange = SourceRange(
       WhitespaceStart, WhitespaceStart.getLocWithOffset(WhitespaceLength));

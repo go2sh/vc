@@ -18,32 +18,44 @@ public:
   StringRef() = default;
   StringRef(std::nullptr_t) = delete;
 
-  StringRef(const char *Str) : Data(Str), Length(Str ? std::strlen(Str) : 0) {}
+  explicit StringRef(const char *Str)
+      : Data(Str), Length(Str != nullptr ? std::strlen(Str) : 0) {}
+  StringRef(const char *Start, const char *End)
+      : Data(Start), Length(End - Start) {}
   StringRef(const char *Data, size_t Length) : Data(Data), Length(Length) {}
-  StringRef(const std::string &Str) : Data(Str.data()), Length(Str.length()) {}
+  explicit StringRef(const std::string &Str)
+      : Data(Str.data()), Length(Str.length()) {}
 
   static const std::size_t npos = -1;
 
-  typedef const char *const_iterator;
+  using const_iterator = const char *;
 
   /*
    * Iterators
    */
-  const_iterator begin() { return Data; }
-  const_iterator end() { return Data + Length; }
-  const_iterator cbegin() { return begin(); }
-  const_iterator cend() { return end(); }
+  auto begin() -> const_iterator { return Data; }
+  auto end() -> const_iterator {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    return Data + Length;
+  }
+  [[nodiscard]] auto cbegin() const -> const_iterator { return Data; }
+  [[nodiscard]] auto cend() const -> const_iterator {
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    return Data + Length;
+  }
 
   /*
    * std::string like functions
    */
-  const char *data() const { return Data; }
-  bool empty() const { return Length == 0; }
-  size_t size() const { return Length; }
-  size_t length() const { return Length; }
-  StringRef substr(std::size_t Pos, std::size_t Len = StringRef::npos) const;
+  [[nodiscard]] auto data() const -> const char * { return Data; }
+  [[nodiscard]] auto empty() const -> bool { return Length == 0; }
+  [[nodiscard]] auto size() const -> size_t { return Length; }
+  [[nodiscard]] auto length() const -> size_t { return Length; }
+  [[nodiscard]] auto substr(std::size_t Pos,
+                            std::size_t Len = StringRef::npos) const
+      -> StringRef;
 
-  bool equals(StringRef S) const {
+  [[nodiscard]] auto equals(StringRef S) const -> bool {
     return Length == S.Length &&
            (Length == 0 || std::memcmp(Data, S.Data, Length) == 0);
   }
@@ -51,43 +63,44 @@ public:
   /*
    * Search
    */
-  std::size_t find(char C) const;
-  std::size_t find_if(std::function<bool(const char)> MatchFunc) const;
-  std::size_t find_if_not(std::function<bool(const char)> MatchFunc) const;
+  [[nodiscard]] auto find(char C) const -> std::size_t;
+  auto find_if(std::function<bool(const char)> MatchFunc) const -> std::size_t;
+  auto find_if_not(std::function<bool(const char)> MatchFunc) const
+      -> std::size_t;
 
   /*
    * Trim
    */
-  StringRef rtrim(StringRef Chars) const;
+  [[nodiscard]] auto rtrim(StringRef Chars) const -> StringRef;
 
   /*
    * String functions
    */
-  std::string str() const {
-    if (!Data)
+  [[nodiscard]] auto str() const -> std::string {
+    if (Data == nullptr) {
       return std::string();
+    }
     return std::string(Data, Length);
   }
 
   /*
    * Operators
    */
-  inline const char operator[](size_t Index) const {
-    assert(Index < Length && "Index out of range");
-    return *(Data + Index);
-  }
+  inline auto operator[](size_t Index) const -> char;
   template <typename T>
-  typename std::enable_if<std::is_same<T, std::string>::value, StringRef>::type
-      &
-      operator=(T &&Str) = delete;
+  auto operator=(T &&Str) ->
+      typename std::enable_if<std::is_same<T, std::string>::value,
+                              StringRef>::type & = delete;
 
   /*
    * Type conversion
    */
-  operator std::string() const { return str(); }
+  explicit operator std::string() const { return str(); }
 };
 
-inline bool operator==(StringRef LHS, StringRef RHS) { return LHS.equals(RHS); }
+inline auto operator==(StringRef LHS, StringRef RHS) -> bool {
+  return LHS.equals(RHS);
+}
 inline void operator<<(std::ostream &LHS, StringRef RHS) {
   LHS.write(RHS.data(), RHS.length());
 }

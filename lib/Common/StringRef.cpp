@@ -1,10 +1,12 @@
 #include "Common/StringRef.h"
 
+#include <algorithm>
+#include <cstddef>
 #include <stdexcept>
 
 using namespace vc;
 
-std::size_t StringRef::find(char C) const {
+auto StringRef::find(char C) const -> std::size_t {
   std::size_t Pos = 0;
 
   while (Pos < Length) {
@@ -16,8 +18,8 @@ std::size_t StringRef::find(char C) const {
   return npos;
 }
 
-std::size_t
-StringRef::find_if(std::function<bool(const char)> MatchFunc) const {
+auto StringRef::find_if(std::function<bool(const char)> MatchFunc) const
+    -> std::size_t {
   std::size_t Pos = 0;
 
   while (Pos < Length) {
@@ -29,39 +31,43 @@ StringRef::find_if(std::function<bool(const char)> MatchFunc) const {
   return npos;
 }
 
-std::size_t
-StringRef::find_if_not(std::function<bool(const char)> MatchFunc) const {
+auto StringRef::find_if_not(std::function<bool(const char)> MatchFunc) const
+    -> std::size_t {
   std::size_t Pos = 0;
 
-  while (Pos < Length) {
-    if (MatchFunc(*(Data + Pos)))
-      return Pos;
-    Pos++;
-  }
+  const char *C = std::find_if_not(cbegin(), cend(), MatchFunc);
 
   return npos;
 }
 
-StringRef StringRef::rtrim(StringRef Chars) const {
-  std::size_t i, j;
-  for (i = (size() - 1); i >= 0; i--) {
-    for (j = 0; j < Chars.size() && Data[i] == Chars[j]; j++)
-      ;
-    if (j == Chars.size())
-      break;
-  }
-  return StringRef(Data, j + 1);
+auto StringRef::rtrim(StringRef Chars) const -> StringRef {
+  const char *C = std::find(cbegin(), cend(), [&Chars](char C) -> bool {
+    return Chars.find(C) != StringRef::npos;
+  });
+  return StringRef(Data, C);
 }
 
-StringRef StringRef::substr(size_t Pos, size_t Len) const {
-  if (Len == StringRef::npos)
+auto StringRef::substr(size_t Pos, size_t Len) const -> StringRef {
+  if (Len == StringRef::npos) {
     Len = size();
-  if (Pos > size())
+  }
+  if (Pos > size()) {
     throw std::out_of_range("Pos");
-  if (Pos == size())
+  }
+  if (Pos == size()) {
     return StringRef();
-  if (Pos + Len > size())
+  }
+  if (Pos + Len > size()) {
     Len = size() - Pos;
+  }
 
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
   return StringRef(data() + Pos, Len);
+}
+
+inline auto vc::StringRef::operator[](size_t Index) const -> char {
+  assert(Index < Length && "Index out of range");
+
+  // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+  return *(Data + Index);
 }

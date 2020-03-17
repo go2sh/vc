@@ -1,11 +1,6 @@
 #include <Common/SourceManager.h>
 #include <Format/Format.h>
 
-#include <boost/filesystem.hpp>
-#include <boost/utility.hpp>
-
-#include <fmt/core.h>
-
 int main(int argc, char **argv) {
   vc::SourceManager ScrMgr;
   vc::SourceFile SF;

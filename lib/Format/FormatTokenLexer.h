@@ -9,8 +9,7 @@
 
 #include "FormatToken.h"
 
-namespace vc {
-namespace format {
+namespace vc::format {
 class FormatTokenLexer {
   Lexer L;
   unsigned TrailingWhitespaces = 0;
@@ -30,13 +29,12 @@ public:
 
   void lex();
 
-  std::vector<FormatToken*> &getTokens() {
+  auto getTokens() -> std::vector<FormatToken*> & {
     return Tokens;
   }
 
 private:
-  FormatToken *getFormatToken();
+  auto getFormatToken() -> FormatToken *;
 };
-} // namespace format
-} // namespace vc
+}  // namespace vc::format
 #endif
