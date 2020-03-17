@@ -299,30 +299,26 @@ void FormatLineParser::parseGenericClause() {
     parseInterfaceList();
   }
 
+  // Consume the ;
   nextToken();
   addFormatLine();
 }
 
 void FormatLineParser::parsePortClause() {
-  if (CurrentToken->is(tok::kw_port)) {
-    // Consume port (
-    nextToken();
-    nextToken();
-    addFormatLine();
-
-    {
-      LineLevelContext LineCtx(*this);
-      parseInterfaceList();
-      addFormatLine();
-    }
-
-    if (CurrentToken->is(tok::right_parenthesis)) {
-      // Consume );
-      nextToken();
-      nextToken();
-      addFormatLine();
-    }
+  if (!CurrentToken->is(tok::kw_port)) {
+    return;
   }
+  nextToken();
+
+  {
+    ParenthesisContext ParenCtx(*this);
+    ScopedLineContext ScopeCtx(*this);
+    LineLevelContext LevelCtx(*this);
+    parseInterfaceList();
+  }
+
+  nextToken();
+  addFormatLine();
 }
 
 void FormatLineParser::parseDeclarativeItem() {

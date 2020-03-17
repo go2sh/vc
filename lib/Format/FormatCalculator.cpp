@@ -1,4 +1,7 @@
+#include <algorithm>
+
 #include "FormatCalculator.h"
+
 using namespace vc;
 using namespace vc::format;
 
@@ -10,6 +13,9 @@ void FormatCalculator::calculateFormatInformation(FormatLine &Line) {
         Token->MustBreakBefore || canBreakBefore(Line, *Token);
     Token->SpacesRequiredBefore = spaceRequiredBefore(Line, *Token);
     Token->NewLinesBefore = newLinesBefore(Line, *Token);
+    for (auto* ChildLine : Token->Children) {
+      calculateFormatInformation(*ChildLine);
+    }
   }
 }
 
