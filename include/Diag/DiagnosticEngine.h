@@ -19,12 +19,7 @@ class DiagnosticBuilder {
   DiagnosticBuilder(DiagnosticEngine &Engine, DiagID ID)
       : Engine(&Engine), Diag(ID) {}
 
-  // DiagnosticBuilder(const DiagnosticBuilder &) = delete;
-  // DiagnosticBuilder &operator=(const DiagnosticBuilder &) = delete;
-  // DiagnosticBuilder &operator=(DiagnosticBuilder &&) = delete;
-
 public:
-  DiagnosticBuilder(DiagID ID) : Engine(0), Diag(ID) {}
   ~DiagnosticBuilder() { flush(); }
 
   void setLocation(SourceLocation Loc) { Diag.Location = Loc; }

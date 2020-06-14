@@ -7,8 +7,7 @@
 #include "EditManager.h"
 
 
-namespace vc {
-namespace format {
+namespace vc::format {
 
 class FormatLineFormater {
   const FormatStyle &Style;
@@ -18,9 +17,8 @@ public:
   FormatLineFormater(EditManager &Manager, const FormatStyle &Style)
       : Manager(Manager), Style(Style) {}
   
-  Penalty format(const std::vector<FormatLine *> &Lines);
+  auto format(const std::vector<FormatLine *> &Lines) -> Penalty;
 };
-} // namespace format
-} // namespace vc
+}  // namespace vc::format
 
 #endif // !VC_FORMAT_FORMATLINEFORMATER_H
