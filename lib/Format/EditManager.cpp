@@ -7,14 +7,15 @@ void EditManager::replaceWhitespace(const FormatToken &FT, unsigned NewLines,
                                     unsigned Spaces) {
   std::string Whitespaces = createWhitespace(NewLines, Spaces);
 
-  if (!FT.WhitespacePrefix.equals(Whitespaces)) {
+  if (FT.WhitespacePrefix != Whitespaces) {
     Edits.addEdit(SourceEdit(FT.WhitespaceRange, Whitespaces));
   }
 }
 
 std::string EditManager::createWhitespace(unsigned NewLines, unsigned Spaces) {
   std::string Result;
-  unsigned ResultTabs = 0, ResultSpaces = 0;
+  unsigned ResultTabs = 0;
+  unsigned ResultSpaces = 0;
 
   if (Style.UseTabs == FormatStyle::UseTabsStyle::Never) {
     ResultSpaces = Spaces;

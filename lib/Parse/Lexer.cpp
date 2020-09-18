@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "Common/CharInfo.h"
-#include "Common/TokenKinds.h"
+
 #include "Parse/DiagnosticsLex.h"
 #include "Parse/Lexer.h"
 #include "Parse/Token.h"
@@ -32,7 +32,7 @@ Lexer::Lexer(SourceLocation FileLocation, const MemoryBuffer *Buffer,
 }
 
 void Lexer::lex(Token &Result) {
-  if (NextToken.isNot(tok::eof)) {
+  if (NextToken.isNot(TokenKind::eof)) {
     lexToken();
   }
   Result = NextToken;
@@ -49,7 +49,7 @@ LexToken:
       goto LexToken;
     }
     CurrentPtr--;
-    return formToken(tok::eof);
+    return formToken(TokenKind::eof);
 
   case ' ':
   case (char)0xA0: // NBSP
@@ -177,7 +177,7 @@ LexToken:
       goto LexToken;
     }
 
-    return formToken(tok::minus);
+    return formToken(TokenKind::minus);
 
   case '/':
     if (*CurrentPtr == '*') {
@@ -203,43 +203,43 @@ LexToken:
 
   // Normal delimiters
   case '&':
-    return formToken(tok::ampersand);
+    return formToken(TokenKind::ampersand);
   case '(':
-    return formToken(tok::left_parenthesis);
+    return formToken(TokenKind::left_parenthesis);
   case ')':
-    return formToken(tok::right_parenthesis);
+    return formToken(TokenKind::right_parenthesis);
   case '+':
-    return formToken(tok::plus);
+    return formToken(TokenKind::plus);
   case ',':
-    return formToken(tok::colon);
+    return formToken(TokenKind::colon);
   case '.':
-    return formToken(tok::dot);
+    return formToken(TokenKind::dot);
   case ';':
-    return formToken(tok::semicolon);
+    return formToken(TokenKind::semicolon);
   case '`':
-    return formToken(tok::grave);
+    return formToken(TokenKind::grave);
   case '|':
-    return formToken(tok::vertical_line);
+    return formToken(TokenKind::vertical_line);
   case '[':
-    return formToken(tok::left_square);
+    return formToken(TokenKind::left_square);
   case ']':
-    return formToken(tok::right_square);
+    return formToken(TokenKind::right_square);
   case '@':
-    return formToken(tok::at);
+    return formToken(TokenKind::at);
   default:
     // Default is an invalid token, maybe add gracefull error handlings for UTF8
     // Chars
-    return formToken(tok::unknown);
+    return formToken(TokenKind::unknown);
   }
 }
 
-tok::TokenKind kindOfIdentifier(StringRef Str) {
+static constexpr auto kindOfIdentifier(std::string_view Str) -> TokenKind {
 #define KEYWORD(identifier, version)                                           \
   if (Str == #identifier) {                                                    \
-    return tok::kw_##identifier;                                               \
+    return TokenKind::kw_##identifier;                                         \
   }
-#include "Common/TokenKinds.def"
-  return tok::basic_identifier;
+#include "Parse/TokenKinds.def"
+  return TokenKind::basic_identifier;
 }
 
 void Lexer::lexIdentifier() {
@@ -268,17 +268,17 @@ void Lexer::lexIdentifier() {
     }
   }
 
-  formToken(tok::basic_identifier);
-  NextToken.setKind(kindOfIdentifier(NextToken.getValue()));
+  formToken(TokenKind::basic_identifier);
+  formToken(kindOfIdentifier(NextToken.getValue()));
 }
 void Lexer::lexExtendedIdentifier() { return; }
 
 void Lexer::lexCharacterLiteral() {
   if (*(CurrentPtr + 1) != '\'') {
-    return formToken(tok::tick);
+    return formToken(TokenKind::tick);
   }
   CurrentPtr += 2;
-  formToken(tok::character_literal);
+  formToken(TokenKind::character_literal);
 }
 
 void Lexer::lexStringLiteral() {
@@ -289,14 +289,14 @@ void Lexer::lexStringLiteral() {
       if (*CurrentPtr == '"') {
         escapeQuotation = true;
       } else {
-        formToken(tok::string_literal);
+        formToken(TokenKind::string_literal);
         return;
       }
     } else if (C == 0) {
       if (CurrentPtr != BufferEnd) {
         void(); // lexed 0 char
       } else {
-        formToken(tok::unknown);
+        formToken(TokenKind::unknown);
         CurrentPtr--;
         return;
       }
@@ -395,7 +395,7 @@ void Lexer::lexNumber() {
           (uint32_t)(uintptr_t)(CurrentPtr - BufferStart)));
     }
   }
-  formToken(tok::decimal_literal);
+  formToken(TokenKind::decimal_literal);
 }
 
 void Lexer::lexDecimalLiteral() {
@@ -412,7 +412,7 @@ void Lexer::lexDecimalLiteral() {
     // Lex exponent
     lexInteger();
   }
-  formToken(tok::decimal_literal);
+  formToken(TokenKind::decimal_literal);
 }
 
 void Lexer::lexBasedLiteral() { return; }
@@ -430,49 +430,51 @@ void Lexer::lexCompoundDelimiter() {
     return;                                                                    \
   }
 
-  TwoByteCompound('=', '>', tok::equal, tok::arrow);
-  TwoByteCompound('*', '*', tok::asterisk, tok::double_star);
-  TwoByteCompound(':', '=', tok::colon, tok::variable_assignment);
-  TwoByteCompound('/', '=', tok::slash, tok::inequal);
+  TwoByteCompound('=', '>', TokenKind::equal, TokenKind::arrow);
+  TwoByteCompound('*', '*', TokenKind::asterisk, TokenKind::double_star);
+  TwoByteCompound(':', '=', TokenKind::colon, TokenKind::variable_assignment);
+  TwoByteCompound('/', '=', TokenKind::slash, TokenKind::inequal);
 
   if (*(CurrentPtr - 1) == '>') {
     if (*CurrentPtr == '=') {
       CurrentPtr++;
-      formToken(tok::greater_equal);
+      formToken(TokenKind::greater_equal);
     } else if (*CurrentPtr == '>') {
       CurrentPtr++;
-      formToken(tok::double_greater);
+      formToken(TokenKind::double_greater);
     } else {
-      formToken(tok::greater);
+      formToken(TokenKind::greater);
     }
     return;
   }
   if (*(CurrentPtr - 1) == '<') {
     if (*CurrentPtr == '=') {
       CurrentPtr++;
-      formToken(tok::less_equal);
+      formToken(TokenKind::less_equal);
     } else if (*CurrentPtr == '>') {
       CurrentPtr++;
-      formToken(tok::box);
+      formToken(TokenKind::box);
     } else if (*CurrentPtr == '<') {
       CurrentPtr++;
-      formToken(tok::double_less);
+      formToken(TokenKind::double_less);
     } else {
-      formToken(tok::less);
+      formToken(TokenKind::less);
     }
     return;
   }
   if (*(CurrentPtr - 1) == '?') {
     CurrentPtr++;
-    TwoByteCompound('/', '=', tok::matching_inequal, tok::matching_equal);
-    TwoByteCompound('<', '=', tok::matching_less_equal, tok::matching_less);
-    TwoByteCompound('>', '=', tok::matching_greater_equal,
-                    tok::matching_greater);
+    TwoByteCompound('/', '=', TokenKind::matching_inequal,
+                    TokenKind::matching_equal);
+    TwoByteCompound('<', '=', TokenKind::matching_less_equal,
+                    TokenKind::matching_less);
+    TwoByteCompound('>', '=', TokenKind::matching_greater_equal,
+                    TokenKind::matching_greater);
     if (*(CurrentPtr - 1) == '?') {
-      formToken(tok::condition_conversion);
+      formToken(TokenKind::condition_conversion);
     } else {
       CurrentPtr--; // Set pointer back since only single byte delimiter
-      formToken(tok::question_mark);
+      formToken(TokenKind::question_mark);
     }
     return;
   }
@@ -498,7 +500,7 @@ bool Lexer::skipSingleLineComment() {
   }
 
   if (KeepComments) {
-    formToken(tok::comment);
+    formToken(TokenKind::comment);
     return true;
   }
 
@@ -524,7 +526,7 @@ bool Lexer::skipMultilineComment() {
   }
 
   if (KeepComments) {
-    formToken(tok::comment);
+    formToken(TokenKind::comment);
     return true;
   }
 
@@ -554,7 +556,7 @@ bool Lexer::skipWhitespace() {
   }
 
   if (KeepWhitespaces) {
-    formToken(tok::unknown);
+    formToken(TokenKind::unknown);
     return true;
   }
 

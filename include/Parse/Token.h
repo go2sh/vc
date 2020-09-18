@@ -1,44 +1,41 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include "Common/SourceLocation.h"
-#include "Common/StringRef.h"
-#include "Common/TokenKinds.h"
 #include <string>
+#include <string_view>
 #include <sys/types.h>
 
-using namespace std;
+#include "Common/SourceLocation.h"
+#include "Parse/TokenKinds.h"
 
 namespace vc {
 class Token {
-  tok::TokenKind Kind;
-  StringRef Value;
+  TokenKind Kind{TokenKind::NUM_TOKENS};
+  std::string_view Value;
   SourceLocation Location;
 
 public:
-  Token() : Kind(tok::NUM_TOKENS){};
-  Token(tok::TokenKind Kind, SourceLocation Location, StringRef Value)
+  Token() = default;
+  Token(TokenKind Kind, SourceLocation Location, std::string_view Value)
       : Kind(Kind), Location(Location), Value(Value) {}
 
-  tok::TokenKind getKind() { return Kind; }
-  void setKind(tok::TokenKind K) { Kind = K; }
-  StringRef getValue() { return Value; };
-  void setValue(StringRef S) { Value = S; };
-  SourceLocation getLocation() { return Location; };
-  void setLocation(SourceLocation Loc) { Location = Loc; };
+  auto getKind() -> TokenKind { return Kind; }
+  //void setKind(TokenKind K) { Kind = K; }
+  auto getValue() -> std::string_view { return Value; }
+  //void setValue(std::string_view S) { Value = S; };
+  auto getLocation() -> SourceLocation { return Location; }
+  //void setLocation(SourceLocation Loc) { Location = Loc; };
 
-  bool is(tok::TokenKind K) { return Kind == K; }
+  auto is(TokenKind K) -> bool { return Kind == K; }
 
-  bool isAny(tok::TokenKind K1) { return Kind == K1; };
-
-  template <typename... T> bool isAny(tok::TokenKind K1, T... K) {
-    return Kind == K1 || isAny(K...);
+  auto isAny(TokenKind K) -> bool { return Kind == K; }
+  template <typename... T> auto isAny(T... K) -> bool {
+    return (isAny(K) || ...);
   };
 
-  bool isNot(tok::TokenKind K) { return Kind != K; }
-
-  template <typename... T> bool isNot(tok::TokenKind K1, T... K) {
-    return Kind != K1 && isNot(K...);
+  auto isNot(TokenKind K) -> bool { return Kind != K; }
+  template <typename... T> auto isNot(T... K) -> bool {
+    return (isNot(K) && ...);
   };
 };
 

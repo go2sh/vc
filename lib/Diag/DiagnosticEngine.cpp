@@ -1,3 +1,6 @@
+#include <algorithm>
+#include <string_view>
+
 #include "Common/CharInfo.h"
 #include "Diag/DiagnosticEngine.h"
 
@@ -25,11 +28,11 @@ static void formatDiagnosticArgument(std::ostream &Out, const DiagnosticArgument
   }
 }
 
-void DiagnosticEngine::formatDiagnosticText(std::ostream &Out, StringRef Text, const std::vector<DiagnosticArgument> &Args) {
+void DiagnosticEngine::formatDiagnosticText(std::ostream &Out, std::string_view Text, const std::vector<DiagnosticArgument> &Args) {
   while (!Text.empty()) {
     // Find the argument start point
     std::size_t PercentPos = Text.find('%');
-    if (PercentPos == StringRef::npos) {
+    if (PercentPos == std::string_view::npos) {
       // Not argument found in string, write it out
       Out.write(Text.data(), Text.size());
       break;
@@ -47,15 +50,15 @@ void DiagnosticEngine::formatDiagnosticText(std::ostream &Out, StringRef Text, c
     }
 
     // Parse the argument index
-    std::size_t ArgNumPos = Text.find_if(IsNumeric);
+    auto ArgNumPos = std::find_if(Text.begin(), Text.end(), IsNumeric);
     unsigned ArgNum;
     try {
-      ArgNum = std::stoul(Text);
+      ArgNum = std::stoul(std::string(Text));
     } catch (std::exception e) {
       assert(false && "Failed to convert dignostic argument index");
     }
     assert (ArgNum < Args.size() && "Argument index out of range");
-    Text = Text.substr(ArgNumPos);
+    Text = Text.substr(std::string_view::npos);
     formatDiagnosticArgument(Out, Args[ArgNum]);
   }
 }

@@ -9,4 +9,4 @@ add_library(vcFormat
     EditManager.cpp
 )
 
-target_link_libraries(vcFormat vcSupport)
+target_link_libraries(vcFormat vcSupport vcParse)

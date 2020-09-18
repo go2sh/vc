@@ -9,8 +9,7 @@
 #include <stack>
 #include <vector>
 
-namespace vc {
-namespace format {
+namespace vc::format {
 
 struct FormatLine {
   /// List of FormatTokens
@@ -47,17 +46,19 @@ public:
   }
 
   ~FormatLineParser() {
-    std::function<void(FormatLine*)> freeLine =
-        [&freeLine](FormatLine *Line) {
-          for (auto Tok : Line->Tokens) {
-            for (auto ChildLine : Tok->Children) {
-              freeLine(ChildLine);
-            }
+    auto freeLine = [](FormatLine *Line) -> void {
+      auto freeLine_ = [](const auto freeLine, FormatLine *Line) -> void {
+        for (auto *Tok : Line->Tokens) {
+          for (auto *ChildLine : Tok->Children) {
+            freeLine(freeLine, ChildLine);
           }
-          std::free(Line);
-        };
+        }
+        std::free(Line);
+      };
+      freeLine_(freeLine_, Line);
+    };
 
-    for (auto Line : Lines) {
+    for (auto *Line : Lines) {
       freeLine(Line);
     }
   }
@@ -76,7 +77,7 @@ private:
   void pushToken(FormatToken *Token);
 
   void addFormatLine();
-  bool eof() { return CurrentToken->is(tok::eof); }
+  bool eof() { return CurrentToken->is(TokenKind::eof); }
 
   void parseDesignFile();
   void parseDesignUnit();
@@ -138,7 +139,6 @@ private:
   void parseSubtypeIndication();
   void parseElementConstraint();
 };
-} // namespace format
-} // namespace vc
+} // namespace vc::format
 
 #endif // !VC_FORMAT_FORMATLINEPARSER_H

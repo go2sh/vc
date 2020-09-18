@@ -29,16 +29,11 @@ if(NOT EXISTS "${TEST_EXECUTABLE}")
   )
 endif()
 execute_process(
-  COMMAND ${TEST_EXECUTOR} "${TEST_EXECUTABLE}" ${spec} --list-test-names-only
+  COMMAND ${TEST_EXECUTOR} "${TEST_EXECUTABLE}" ${spec} --list-tests --verbosity quiet
   OUTPUT_VARIABLE output
   RESULT_VARIABLE result
 )
-# Catch --list-test-names-only reports the number of tests, so 0 is... surprising
-if(${result} EQUAL 0)
-  message(WARNING
-    "Test executable '${TEST_EXECUTABLE}' contains no tests!\n"
-  )
-elseif(${result} LESS 0)
+if(NOT ${result} EQUAL 0)
   message(FATAL_ERROR
     "Error running test executable '${TEST_EXECUTABLE}':\n"
     "  Result: ${result}\n"
@@ -51,12 +46,17 @@ string(REPLACE "\n" ";" output "${output}")
 # Parse output
 foreach(line ${output})
   set(test ${line})
+  # Escape characters in test case names that would be parsed by Catch2
+  set(test_name ${test})
+  foreach(char , [ ])
+    string(REPLACE ${char} "\\${char}" test_name ${test_name})
+  endforeach(char)
   # ...and add to script
   add_command(add_test
     "${prefix}${test}${suffix}"
     ${TEST_EXECUTOR}
     "${TEST_EXECUTABLE}"
-    "${test}"
+    "${test_name}"
     ${extra_args}
   )
   add_command(set_tests_properties

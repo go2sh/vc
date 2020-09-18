@@ -20,7 +20,7 @@ void FormatCalculator::calculateFormatInformation(FormatLine &Line) {
 }
 
 bool FormatCalculator::mustBreakBefore(FormatLine &Line, FormatToken &Token) {
-  if (Token.Previous && Token.Previous->is(tok::comment)) {
+  if (Token.Previous && Token.Previous->is(TokenKind::comment)) {
     return true;
   }
 
@@ -29,15 +29,15 @@ bool FormatCalculator::mustBreakBefore(FormatLine &Line, FormatToken &Token) {
 
 bool FormatCalculator::canBreakBefore(FormatLine &Line, FormatToken &Token) {
   /* Dont break generic/port map/clause and left parenthesis*/
-  if (Token.is(tok::left_parenthesis) && Token.Previous &&
-      Token.Previous->isAny(tok::kw_generic, tok::kw_port, tok::kw_map)) {
+  if (Token.is(TokenKind::left_parenthesis) && Token.Previous &&
+      Token.Previous->isAny(TokenKind::kw_generic, TokenKind::kw_port, TokenKind::kw_map)) {
     return false;
   }
-  if (Token.is(tok::kw_map)) {
+  if (Token.is(TokenKind::kw_map)) {
     return false;
   }
 
-  if (Token.is(tok::right_parenthesis) &&
+  if (Token.is(TokenKind::right_parenthesis) &&
       Style.ClosingBrackets == FormatStyle::ClosingBracketsStyle::NoNewline) {
     return false;
   }
@@ -46,16 +46,16 @@ bool FormatCalculator::canBreakBefore(FormatLine &Line, FormatToken &Token) {
 
 bool FormatCalculator::spaceRequiredBefore(FormatLine &Line,
                                            FormatToken &Token) {
-  if (Token.is(tok::left_parenthesis)) {
+  if (Token.is(TokenKind::left_parenthesis)) {
     return false;
   }
-  if (Token.is(tok::semicolon)) {
+  if (Token.is(TokenKind::semicolon)) {
     return false;
   }
-  if (Token.is(tok::right_parenthesis)) {
+  if (Token.is(TokenKind::right_parenthesis)) {
     return false;
   }
-  if (Token.Previous && Token.Previous->is(tok::left_parenthesis)) {
+  if (Token.Previous && Token.Previous->is(TokenKind::left_parenthesis)) {
     return false;
   }
   // No space a start of line

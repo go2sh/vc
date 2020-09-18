@@ -1,16 +1,18 @@
+#include <cassert>
+#include <memory>
+
 #include "FormatLineParser.h"
 
 using namespace vc;
 using namespace vc::format;
 
-namespace vc {
-namespace format {
+namespace vc::format {
 
 class LineLevelContext {
   FormatLineParser &Parser;
 
 public:
-  LineLevelContext(FormatLineParser &Parser) : Parser(Parser) {
+  explicit LineLevelContext(FormatLineParser &Parser) : Parser(Parser) {
     Parser.Level++;
   }
   ~LineLevelContext() { Parser.Level--; }
@@ -25,7 +27,7 @@ class ParenthesisContext {
   FormatLineParser &Parser;
 
 public:
-  ParenthesisContext(FormatLineParser &Parser) : Parser(Parser) {
+  explicit ParenthesisContext(FormatLineParser &Parser) : Parser(Parser) {
     FormatToken *LParen = Parser.CurrentToken;
 
     // First add the token to the line, then update the stack
@@ -50,11 +52,11 @@ class ScopedLineContext {
   FormatLineParser &Parser;
 
 public:
-  ScopedLineContext(FormatLineParser &Parser) : Parser(Parser) {
+  explicit ScopedLineContext(FormatLineParser &Parser) : Parser(Parser) {
     OriginalLines = Parser.CurrentLines;
     OriginalLine = std::move(Parser.Line);
     Parser.CurrentLines = &OriginalLine->Tokens.back()->Children;
-    Parser.Line = std::unique_ptr<FormatLine>{new FormatLine()};
+    Parser.Line = std::make_unique<FormatLine>();
   }
 
   ~ScopedLineContext() {
@@ -65,8 +67,7 @@ public:
     Parser.CurrentLines = OriginalLines;
   }
 };
-} // namespace format
-} // namespace vc
+}  // namespace vc::format
 
 void FormatLineParser::readToken() { CurrentToken = *TokenIt++; }
 
@@ -114,17 +115,17 @@ void FormatLineParser::parse() {
 void FormatLineParser::parseDesignFile() {
   do {
     switch (CurrentToken->Tok.getKind()) {
-    case tok::semicolon:
+    case TokenKind::semicolon:
       nextToken();
       addFormatLine();
       break;
-    case tok::kw_context:
+    case TokenKind::kw_context:
       parseContextDecl();
       break;
-    case tok::kw_entity:
+    case TokenKind::kw_entity:
       parseEntityDecl();
       break;
-    case tok::kw_architecture:
+    case TokenKind::kw_architecture:
       parseArchitectureDecl();
       break;
     default:
@@ -138,16 +139,16 @@ void FormatLineParser::parseDesignFile() {
 }
 
 void FormatLineParser::parseContextDecl() {
-  assert(CurrentToken->is(tok::kw_context));
+  assert(CurrentToken->is(TokenKind::kw_context));
   nextToken();
 
-  while (CurrentToken->isNot(tok::semicolon, tok::kw_is)) {
+  while (CurrentToken->isNot(TokenKind::semicolon, TokenKind::kw_is)) {
     nextToken();
   }
 
-  if (CurrentToken->is(tok::kw_is)) {
-    while (CurrentToken->isNot(tok::kw_end)) {
-      if (CurrentToken->is(tok::semicolon)) {
+  if (CurrentToken->is(TokenKind::kw_is)) {
+    while (CurrentToken->isNot(TokenKind::kw_end)) {
+      if (CurrentToken->is(TokenKind::semicolon)) {
         nextToken();
         addFormatLine();
       } else {
@@ -172,11 +173,11 @@ void FormatLineParser::parseEntityDecl() {
     parsePortClause();
 
     // Parse the declarations
-    while (CurrentToken->isNot(tok::kw_end)) {
+    while (CurrentToken->isNot(TokenKind::kw_end)) {
       if (eof()) {
         return;
       }
-      if (CurrentToken->is(tok::semicolon)) {
+      if (CurrentToken->is(TokenKind::semicolon)) {
         nextToken();
         addFormatLine();
       } else {
@@ -189,10 +190,10 @@ void FormatLineParser::parseEntityDecl() {
 
   // Parse end
   nextToken();
-  if (CurrentToken->is(tok::kw_entity)) {
+  if (CurrentToken->is(TokenKind::kw_entity)) {
     nextToken();
   }
-  if (CurrentToken->is(tok::basic_identifier)) {
+  if (CurrentToken->is(TokenKind::basic_identifier)) {
     nextToken();
   }
   nextToken();
@@ -207,14 +208,14 @@ void FormatLineParser::parseArchitectureDecl() {
   do {
     // TODO: Parse name
     nextToken();
-  } while (CurrentToken->isNot(tok::kw_is));
+  } while (CurrentToken->isNot(TokenKind::kw_is));
   nextToken();
   addFormatLine();
 
   // Declarations
   {
     LineLevelContext LineCtx{*this};
-    while (!eof() && CurrentToken->isNot(tok::kw_begin)) {
+    while (!eof() && CurrentToken->isNot(TokenKind::kw_begin)) {
       parseDeclarativeItem();
     }
   }
@@ -226,15 +227,15 @@ void FormatLineParser::parseArchitectureDecl() {
   // Statements
   {
     LineLevelContext{*this};
-    while (!eof() && CurrentToken->isNot(tok::kw_end)) {
+    while (!eof() && CurrentToken->isNot(TokenKind::kw_end)) {
       parseConcurrentStatement();
     }
   }
   nextToken();
-  if (CurrentToken->is(tok::kw_architecture)) {
+  if (CurrentToken->is(TokenKind::kw_architecture)) {
     nextToken();
   }
-  if (CurrentToken->is(tok::basic_identifier)) {
+  if (CurrentToken->is(TokenKind::basic_identifier)) {
     nextToken();
   }
   nextToken();
@@ -244,36 +245,36 @@ void FormatLineParser::parseArchitectureDecl() {
 void FormatLineParser::parseInterfaceList() {
   std::size_t InitialStackSize = ParenStack.size();
 
-  while (!eof() && CurrentToken->isNot(tok::kw_end)) {
+  while (!eof() && CurrentToken->isNot(TokenKind::kw_end)) {
     switch (CurrentToken->Tok.getKind()) {
-    case tok::kw_constant:
-    case tok::kw_signal:
-    case tok::kw_variable:
-    case tok::kw_file:
+    case TokenKind::kw_constant:
+    case TokenKind::kw_signal:
+    case TokenKind::kw_variable:
+    case TokenKind::kw_file:
       parseObjectDeclaration();
       break;
 
-    case tok::kw_type:
+    case TokenKind::kw_type:
       parseTypeDeclaration();
       break;
 
-    case tok::kw_pure:
-    case tok::kw_impure:
-    case tok::kw_function:
-    case tok::kw_procedure:
+    case TokenKind::kw_pure:
+    case TokenKind::kw_impure:
+    case TokenKind::kw_function:
+    case TokenKind::kw_procedure:
       parseSubprogram();
       break;
 
-    case tok::kw_package:
+    case TokenKind::kw_package:
       parsePackage();
 
-    case tok::right_parenthesis:
+    case TokenKind::right_parenthesis:
       if (ParenStack.size() == InitialStackSize) {
         return;
       }
       break;
 
-    case tok::semicolon:
+    case TokenKind::semicolon:
       nextToken();
       addFormatLine();
       break;
@@ -286,7 +287,7 @@ void FormatLineParser::parseInterfaceList() {
 }
 
 void FormatLineParser::parseGenericClause() {
-  if (!CurrentToken->is(tok::kw_generic)) {
+  if (!CurrentToken->is(TokenKind::kw_generic)) {
     return;
   }
   nextToken();
@@ -305,7 +306,7 @@ void FormatLineParser::parseGenericClause() {
 }
 
 void FormatLineParser::parsePortClause() {
-  if (!CurrentToken->is(tok::kw_port)) {
+  if (!CurrentToken->is(TokenKind::kw_port)) {
     return;
   }
   nextToken();
@@ -323,39 +324,39 @@ void FormatLineParser::parsePortClause() {
 
 void FormatLineParser::parseDeclarativeItem() {
   switch (CurrentToken->Tok.getKind()) {
-  case tok::kw_pure:
-  case tok::kw_impure:
-  case tok::kw_function:
-  case tok::kw_procedure:
+  case TokenKind::kw_pure:
+  case TokenKind::kw_impure:
+  case TokenKind::kw_function:
+  case TokenKind::kw_procedure:
     parseSubprogram();
     break;
-  case tok::kw_package:
+  case TokenKind::kw_package:
     parsePackage();
     break;
-  case tok::kw_type:
+  case TokenKind::kw_type:
     parseTypeDeclaration();
     break;
-  case tok::kw_subtype:
+  case TokenKind::kw_subtype:
     parseSubtypeDeclaration();
     break;
-  case tok::kw_component:
+  case TokenKind::kw_component:
     parseComponentDeclaration();
     break;
-  case tok::kw_shared:
+  case TokenKind::kw_shared:
     nextToken();
     [[fallthrough]];
-  case tok::kw_variable:
-  case tok::kw_signal:
-  case tok::kw_constant:
-  case tok::kw_file:
+  case TokenKind::kw_variable:
+  case TokenKind::kw_signal:
+  case TokenKind::kw_constant:
+  case TokenKind::kw_file:
     parseObjectDeclaration();
     break;
   // Fallback
-  case tok::semicolon:
+  case TokenKind::semicolon:
     nextToken();
     addFormatLine();
     break;
-  case tok::eof:
+  case TokenKind::eof:
     return;
   default:
     nextToken();
@@ -363,12 +364,12 @@ void FormatLineParser::parseDeclarativeItem() {
 }
 
 void FormatLineParser::parseSubprogram() {
-  if (CurrentToken->isAny(tok::kw_pure, tok::kw_impure)) {
+  if (CurrentToken->isAny(TokenKind::kw_pure, TokenKind::kw_impure)) {
     nextToken();
   }
   nextToken();
   nextToken();
-  if (CurrentToken->isNot(tok::kw_is)) {
+  if (CurrentToken->isNot(TokenKind::kw_is)) {
     parseSubprogramBody();
   } else {
     // parseSubprogramInstantiation();
@@ -377,7 +378,7 @@ void FormatLineParser::parseSubprogram() {
 
 void FormatLineParser::parseSubprogramBody() {
   // Genric clause
-  if (CurrentToken->is(tok::kw_generic)) {
+  if (CurrentToken->is(TokenKind::kw_generic)) {
     nextToken();
     nextToken();
     parseInterfaceList();
@@ -385,27 +386,27 @@ void FormatLineParser::parseSubprogramBody() {
   }
 
   // Generic map
-  if (CurrentToken->is(tok::kw_generic)) {
+  if (CurrentToken->is(TokenKind::kw_generic)) {
     // parseGenericMapAspect();
   }
 
-  if (CurrentToken->is(tok::kw_parameter)) {
+  if (CurrentToken->is(TokenKind::kw_parameter)) {
     nextToken();
   }
 
-  if (CurrentToken->is(tok::left_parenthesis)) {
+  if (CurrentToken->is(TokenKind::left_parenthesis)) {
     nextToken();
     parseInterfaceList();
     nextToken();
   }
 
-  if (CurrentToken->is(tok::kw_return)) {
+  if (CurrentToken->is(TokenKind::kw_return)) {
     nextToken();
     parseName();
   }
 
   // Subprogram declaration
-  if (CurrentToken->is(tok::semicolon)) {
+  if (CurrentToken->is(TokenKind::semicolon)) {
     nextToken();
     addFormatLine();
     return;
@@ -418,7 +419,7 @@ void FormatLineParser::parseSubprogramBody() {
   // Declarations
   {
     LineLevelContext LineCtx{*this};
-    while (CurrentToken->isNot(tok::kw_begin)) {
+    while (CurrentToken->isNot(TokenKind::kw_begin)) {
       parseDeclarativeItem();
     }
   }
@@ -430,15 +431,15 @@ void FormatLineParser::parseSubprogramBody() {
   // Sequential statements
   {
     LineLevelContext LineCtx{*this};
-    while (CurrentToken->isNot(tok::kw_end)) {
+    while (CurrentToken->isNot(TokenKind::kw_end)) {
       parseSequentialStatement();
     }
   }
   nextToken();
-  if (CurrentToken->isAny(tok::kw_function, tok::kw_procedure)) {
+  if (CurrentToken->isAny(TokenKind::kw_function, TokenKind::kw_procedure)) {
     nextToken();
   }
-  if (CurrentToken->is(tok::basic_identifier)) {
+  if (CurrentToken->is(TokenKind::basic_identifier)) {
     nextToken();
   }
   nextToken();
@@ -451,29 +452,29 @@ void FormatLineParser::parseTypeDeclaration() {
   nextToken();
   nextToken();
 
-  if (CurrentToken->isNot(tok::kw_is)) {
+  if (CurrentToken->isNot(TokenKind::kw_is)) {
     return;
   }
   nextToken();
 
   switch (CurrentToken->Tok.getKind()) {
-  case tok::kw_range:
+  case TokenKind::kw_range:
     nextToken();
     parseExpression();
-    if (tok::kw_units) {
+    if (CurrentToken->is(TokenKind::kw_units)) {
       parsePhysicalTypeDefinition();
     }
     break;
-  case tok::left_parenthesis:
-    while (!eof() && CurrentToken->isNot(tok::right_parenthesis)) {
+  case TokenKind::left_parenthesis:
+    while (!eof() && CurrentToken->isNot(TokenKind::right_parenthesis)) {
       nextToken();
     }
     nextToken();
     break;
-  case tok::kw_array:
+  case TokenKind::kw_array:
     parseArrayTypeDefinition();
     break;
-  case tok::kw_record:
+  case TokenKind::kw_record:
     parseRecordTypeDefinition();
   }
 }
@@ -487,14 +488,14 @@ void FormatLineParser::parseArrayTypeDefinition() {}
 void FormatLineParser::parseRecordTypeDefinition() {}
 
 void FormatLineParser::parseObjectDeclaration() {
-  if (CurrentToken->isAny(tok::kw_constant, tok::kw_signal, tok::kw_variable,
-                          tok::kw_file)) {
+  if (CurrentToken->isAny(TokenKind::kw_constant, TokenKind::kw_signal, TokenKind::kw_variable,
+                          TokenKind::kw_file)) {
     nextToken();
   }
 
   // Identifier list
   nextToken();
-  while (!eof() && CurrentToken->is(tok::comma)) {
+  while (!eof() && CurrentToken->is(TokenKind::comma)) {
     nextToken();
     nextToken();
   }
@@ -503,29 +504,29 @@ void FormatLineParser::parseObjectDeclaration() {
   nextToken();
 
   // Direction
-  if (CurrentToken->isAny(tok::kw_in, tok::kw_out, tok::kw_inout,
-                          tok::kw_buffer, tok::kw_linkage)) {
+  if (CurrentToken->isAny(TokenKind::kw_in, TokenKind::kw_out, TokenKind::kw_inout,
+                          TokenKind::kw_buffer, TokenKind::kw_linkage)) {
     nextToken();
   }
 
   parseSubtypeIndication();
 
   // Signal mode or file mode
-  if (CurrentToken->isAny(tok::kw_register, tok::kw_bus)) {
+  if (CurrentToken->isAny(TokenKind::kw_register, TokenKind::kw_bus)) {
     nextToken();
-  } else if (CurrentToken->is(tok::kw_open)) {
+  } else if (CurrentToken->is(TokenKind::kw_open)) {
     parseExpression();
   }
 
   // File name or default value
-  if (CurrentToken->isAny(tok::variable_assignment, tok::kw_is)) {
+  if (CurrentToken->isAny(TokenKind::variable_assignment, TokenKind::kw_is)) {
     parseExpression();
   }
 }
 
 void FormatLineParser::parseConcurrentStatement() {
-  while (!eof() && CurrentToken->isNot(tok::semicolon)) {
-    if (CurrentToken->is(tok::kw_end)) {
+  while (!eof() && CurrentToken->isNot(TokenKind::semicolon)) {
+    if (CurrentToken->is(TokenKind::kw_end)) {
       return;
     }
     nextToken();
@@ -535,8 +536,8 @@ void FormatLineParser::parseConcurrentStatement() {
 }
 
 void FormatLineParser::parseSequentialStatement() {
-  while (!eof() && CurrentToken->isNot(tok::semicolon)) {
-    if (CurrentToken->is(tok::kw_end)) {
+  while (!eof() && CurrentToken->isNot(TokenKind::semicolon)) {
+    if (CurrentToken->is(TokenKind::kw_end)) {
       return;
     }
     nextToken();
@@ -546,9 +547,9 @@ void FormatLineParser::parseSequentialStatement() {
 }
 
 void FormatLineParser::parseName() {
-  while (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier,
-                             tok::dot, tok::tick, tok::left_parenthesis)) {
-    if (CurrentToken->isNot(tok::left_parenthesis)) {
+  while (CurrentToken->isAny(TokenKind::basic_identifier, TokenKind::extended_identifier,
+                             TokenKind::dot, TokenKind::tick, TokenKind::left_parenthesis)) {
+    if (CurrentToken->isNot(TokenKind::left_parenthesis)) {
       nextToken();
     } else {
       ParenthesisContext ParenCtx(*this);
@@ -567,38 +568,38 @@ void FormatLineParser::parseExpression() {
 
   while (!eof()) {
     switch (CurrentToken->Tok.getKind()) {
-    case tok::basic_identifier:
-    case tok::extended_identifier:
+    case TokenKind::basic_identifier:
+    case TokenKind::extended_identifier:
       IsLogicalUnary = false;
       parseName();
       break;
 
-    case tok::based_literal:
-    case tok::bit_string_literal:
-    case tok::character_literal:
-    case tok::decimal_literal:
-    case tok::string_literal:
+    case TokenKind::based_literal:
+    case TokenKind::bit_string_literal:
+    case TokenKind::character_literal:
+    case TokenKind::decimal_literal:
+    case TokenKind::string_literal:
       IsLogicalUnary = false;
       nextToken();
       break;
 
-    case tok::plus:
-    case tok::minus:
+    case TokenKind::plus:
+    case TokenKind::minus:
       PrecLevel = prec::Sign;
       nextToken();
 
-    case tok::kw_not:
-    case tok::kw_abs:
+    case TokenKind::kw_not:
+    case TokenKind::kw_abs:
       IsLogicalUnary = true;
       PrecLevel = prec::Miscellaneous;
       nextToken();
       break;
-    case tok::kw_and:
-    case tok::kw_nand:
-    case tok::kw_or:
-    case tok::kw_nor:
-    case tok::kw_xor:
-    case tok::kw_xnor:
+    case TokenKind::kw_and:
+    case TokenKind::kw_nand:
+    case TokenKind::kw_or:
+    case TokenKind::kw_nor:
+    case TokenKind::kw_xor:
+    case TokenKind::kw_xnor:
       if (!IsLogicalUnary) {
         prec::Level Prec =
             getBinaryOperatorPrecedence(CurrentToken->Tok.getKind());
@@ -609,7 +610,7 @@ void FormatLineParser::parseExpression() {
       } else {
       }
 
-    case tok::left_parenthesis: {
+    case TokenKind::left_parenthesis: {
       ParenthesisContext ParenCtx(*this);
       prec::Level OutsidePrecLevel = PrecLevel;
       PrecLevel = prec::Unknown;
@@ -618,19 +619,19 @@ void FormatLineParser::parseExpression() {
       break;
     }
 
-    case tok::kw_to:
-    case tok::kw_downto:
+    case TokenKind::kw_to:
+    case TokenKind::kw_downto:
       // Handle range expression
       PrecLevel = prec::Unknown;
       IsLogicalUnary = true;
       nextToken();
       break;
 
-    case tok::right_parenthesis:
-    case tok::semicolon:
-    case tok::kw_then:
-    case tok::kw_loop:
-    case tok::kw_generate:
+    case TokenKind::right_parenthesis:
+    case TokenKind::semicolon:
+    case TokenKind::kw_then:
+    case TokenKind::kw_loop:
+    case TokenKind::kw_generate:
       // Stop parsing on unmatched parenthesis, semicolon and some keywords
       if (CurrentToken->Previous) {
         CurrentToken->Previous->FakeRParen;
@@ -644,14 +645,14 @@ void FormatLineParser::parseExpression() {
 }
 
 void FormatLineParser::parseListRangeIndex() {
-  while (!eof() && CurrentToken->isNot(tok::right_parenthesis)) {
+  while (!eof() && CurrentToken->isNot(TokenKind::right_parenthesis)) {
     parseExpression();
     switch (CurrentToken->Tok.getKind()) {
-    case tok::arrow:
-    case tok::comma:
+    case TokenKind::arrow:
+    case TokenKind::comma:
       nextToken();
-    case tok::kw_downto:
-    case tok::kw_to:
+    case TokenKind::kw_downto:
+    case TokenKind::kw_to:
       nextToken();
       parseExpression();
       break;
@@ -668,22 +669,22 @@ void FormatLineParser::parseSubtypeIndication() {
     }
 
     // Consume single element function
-    if (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier)) {
+    if (CurrentToken->isAny(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
       parseName();
     }
 
     // Array or record resolution
-    if (CurrentToken->is(tok::left_parenthesis)) {
+    if (CurrentToken->is(TokenKind::left_parenthesis)) {
       ParenthesisContext ParenCtx(*this);
       bool Valid = true;
 
-      while (!eof() && CurrentToken->isNot(tok::right_parenthesis)) {
-        if (CurrentToken->isAny(tok::basic_identifier,
-                                tok::extended_identifier)) {
+      while (!eof() && CurrentToken->isNot(TokenKind::right_parenthesis)) {
+        if (CurrentToken->isAny(TokenKind::basic_identifier,
+                                TokenKind::extended_identifier)) {
           parseName();
         }
         self(self);
-        if (CurrentToken->is(tok::comma)) {
+        if (CurrentToken->is(TokenKind::comma)) {
           nextToken();
         }
       }
@@ -693,28 +694,28 @@ void FormatLineParser::parseSubtypeIndication() {
   parseResolutionIndication(parseResolutionIndication);
 
   // Try to parse the type mark
-  if (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier)) {
+  if (CurrentToken->isAny(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
     parseName();
   }
 
-  if (CurrentToken->is(tok::kw_range)) {
+  if (CurrentToken->is(TokenKind::kw_range)) {
     nextToken();
     parseExpression();
-  } else if (CurrentToken->is(tok::left_parenthesis)) {
+  } else if (CurrentToken->is(TokenKind::left_parenthesis)) {
     ParenthesisContext Paren(*this);
     do {
       parseExpression();
-      if (CurrentToken->is(tok::comma)) {
+      if (CurrentToken->is(TokenKind::comma)) {
         nextToken();
       }
-    } while (CurrentToken->isNot(tok::right_parenthesis, tok::semicolon));
+    } while (CurrentToken->isNot(TokenKind::right_parenthesis, TokenKind::semicolon));
   }
 }
 
 void FormatLineParser::parseComponentDeclaration() {
   nextToken();
   nextToken();
-  if (CurrentToken->is(tok::kw_is)) {
+  if (CurrentToken->is(TokenKind::kw_is)) {
     nextToken();
   }
   addFormatLine();
@@ -724,12 +725,12 @@ void FormatLineParser::parseComponentDeclaration() {
     parseGenericClause();
     parsePortClause();
   }
-  while (!eof() && CurrentToken->isNot(tok::kw_end)) {
+  while (!eof() && CurrentToken->isNot(TokenKind::kw_end)) {
     nextToken();
   }
   nextToken();
   nextToken();
-  if (CurrentToken->isAny(tok::basic_identifier, tok::extended_identifier)) {
+  if (CurrentToken->isAny(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
     nextToken();
   }
 }

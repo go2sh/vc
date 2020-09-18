@@ -5,7 +5,7 @@
 #include "Common/MemoryBuffer.h"
 #include "Common/SourceManager.h"
 #include "Common/StringRef.h"
-#include "Common/TokenKinds.h"
+#include "Parse/TokenKinds.h"
 #include "Diag/DiagnosticConsumer.h"
 #include "Diag/DiagnosticEngine.h"
 #include "Parse/Lexer.h"
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
   Token Result;
   do {
     lexer.lex(Result);
-  } while (Result.getKind() != tok::TokenKind::eof);
+  } while (Result.getKind() != TokenKind::eof);
 
   return 0;
 }

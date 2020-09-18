@@ -1,12 +1,13 @@
 #ifndef LEXER_H
 #define LEXER_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <string_view>
 
 #include "Common/MemoryBuffer.h"
 #include "Common/SourceLocation.h"
-#include "Common/StringRef.h"
 #include "Diag/DiagnosticEngine.h"
+
 #include "Parse/Token.h"
 
 namespace vc {
@@ -45,8 +46,8 @@ public:
   void setKeepWhitespaces(bool Keep) { KeepWhitespaces = Keep; }
   void setKeepComments(bool Keep) { KeepComments = Keep; }
 
-  auto getStringRef() -> StringRef {
-    return StringRef(BufferStart, BufferEnd);
+  auto getStringRef() -> std::string_view {
+    return std::string_view(BufferStart, (BufferEnd - BufferStart));
   }
 
 private:
@@ -69,12 +70,13 @@ private:
   auto skipMultilineComment() -> bool;
   auto skipWhitespace() -> bool;
 
-  void formToken(tok::TokenKind Kind) {
-    NextToken.setKind(Kind);
-    NextToken.setValue(
-        StringRef(TokenStart, (size_t)(CurrentPtr - TokenStart)));
-    NextToken.setLocation(FileLocation.getLocWithOffset(
-        (uint32_t)(uintptr_t)(TokenStart - BufferStart)));
+  void formToken(TokenKind Kind) {
+    NextToken = Token{
+        Kind,
+        FileLocation.getLocWithOffset(
+            static_cast<uint32_t>(TokenStart - BufferStart)),
+        std::string_view(TokenStart,
+                         static_cast<std::size_t>(CurrentPtr - TokenStart))};
     TokenStart = CurrentPtr;
   }
 };

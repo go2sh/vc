@@ -1,0 +1,21 @@
+{
+ "profile_host": "[settings]\narch=x86_64\narch_build=x86_64\nbuild_type=Release\ncompiler=gcc\ncompiler.libcxx=libstdc++\ncompiler.version=10\nos=Linux\nos_build=Linux\n[options]\n[build_requires]\n[env]\n",
+ "graph_lock": {
+  "nodes": {
+   "0": {
+    "pref": null,
+    "options": "fmt:fPIC=True\nfmt:header_only=False\nfmt:shared=False\nfmt:with_fmt_alias=False",
+    "requires": [
+     "1"
+    ],
+    "path": "/home/chris/Coding/vhdl_tools/vc/conanfile.txt"
+   },
+   "1": {
+    "pref": "fmt/6.2.1#0:82ef5eac51c38971dea2fd342dd55ddf2ddfbbc3#5caddae83fdcb95b131f62ef09f8bf93",
+    "options": "fPIC=True\nheader_only=False\nshared=False\nwith_fmt_alias=False",
+    "modified": "built"
+   }
+  }
+ },
+ "version": "0.3"
+}

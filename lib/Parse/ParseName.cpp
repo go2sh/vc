@@ -14,7 +14,7 @@ Expr *Parser::parseName() {
 
   while (ParseSubExpr) {
     switch (Tok.getKind()) {
-    case tok::dot:
+    case TokenKind::dot:
       CurrentExpr = new SelectedExpr(CurrentExpr,parseSelectedName());
       break;
     default:
@@ -26,14 +26,14 @@ Expr *Parser::parseName() {
 
 Expr *Parser::parseSelectedName() {
   Expr *Suffix;
-  consumeToken(tok::dot);
-  if (Tok.isAny(tok::basic_identifier, tok::extended_identifier)) {
+  consumeToken(TokenKind::dot);
+  if (Tok.isAny(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
     Suffix = new DeclRefExpr(Tok.getValue());
-  } else if (Tok.is(tok::kw_all)) {
+  } else if (Tok.is(TokenKind::kw_all)) {
     Suffix = new AnyExpr();
-  } else if (Tok.is(tok::character_literal)) {
+  } else if (Tok.is(TokenKind::character_literal)) {
     Suffix = new CharLiteralExpr(Tok.getValue());
-  } else if (Tok.is(tok::string_literal)) {
+  } else if (Tok.is(TokenKind::string_literal)) {
     Suffix = new StringLiteralExpr(Tok.getValue());
   } else {
     DiagnosticBuilder D = Diag->diagnose(diag::wrong_selected_name_suffix); 
@@ -46,7 +46,7 @@ Expr *Parser::parseSelectedName() {
 
 Expr *Parser::parseSimpleName() {
   Expr *R;
-  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+  if (Tok.isNot(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier); 
     D.setLocation(Tok.getLocation());
     return new ErrorExpr();

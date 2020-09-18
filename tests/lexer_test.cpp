@@ -5,7 +5,7 @@
 #include "Diag/DiagnosticConsumer.h"
 #include "Diag/DiagnosticEngine.h"
 #include "Common/SourceManager.h"
-#include "Common/TokenKinds.h"
+#include "Parse/TokenKinds.h"
 #include "Parse/Lexer.h"
 #include "Parse/Parser.h"
 

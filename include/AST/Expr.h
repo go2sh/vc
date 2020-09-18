@@ -1,7 +1,9 @@
 #ifndef VC_EXPR_H
 #define VC_EXPR_H
 
-#include "Common/StringRef.h"
+#include <string_view>
+
+#include "AST/Identifier.h"
 
 namespace vc {
 
@@ -37,11 +39,11 @@ public:
 };
 
 class DeclRefExpr : public Expr {
-  StringRef Name;
+  Identifier Name;
 
 public:
-  DeclRefExpr(StringRef N) : Expr(ExprKind::DeclRefExpr), Name(N) {}
-  void setName(StringRef N) { Name = N; }
+  DeclRefExpr(Identifier N) : Expr(ExprKind::DeclRefExpr), Name(N) {}
+  void setName(Identifier N) { Name = N; }
 };
 
 class SelectedExpr : public Expr {
@@ -56,23 +58,23 @@ public:
 };
 
 class LiteralExpr : public Expr {
-  StringRef Value;
+  std::string_view Value;
 
 public:
-  LiteralExpr(ExprKind Kind, StringRef Val) : Expr(Kind), Value(Val) {}
+  LiteralExpr(ExprKind Kind, std::string_view Val) : Expr(Kind), Value(Val) {}
   void setName(std::string &N) { Value = N; }
 };
 
 class StringLiteralExpr : public LiteralExpr {
 
 public:
-  StringLiteralExpr(StringRef Val)
+  StringLiteralExpr(std::string_view Val)
       : LiteralExpr(ExprKind::StringLiteralExpr, Val) {}
 };
 
 class CharLiteralExpr : public LiteralExpr {
 public:
-  CharLiteralExpr(StringRef Val)
+  CharLiteralExpr(std::string_view Val)
       : LiteralExpr(ExprKind::CharLiteralExpr, Val) {}
 };
 }; // namespace vc

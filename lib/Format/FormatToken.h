@@ -1,10 +1,12 @@
 #ifndef VC_FORMAT_FORMATTOKEN_H
 #define VC_FORMAT_FORMATTOKEN_H
+#include <string_view>
+#include <vector>
+
 #include <Common/SourceLocation.h>
 #include <Parse/Token.h>
 
-namespace vc {
-namespace format {
+namespace vc::format {
 
 struct FormatLine;
 
@@ -12,7 +14,7 @@ struct FormatLine;
  * Contains the format information
  */
 struct FormatToken {
-  FormatToken() {}
+  FormatToken() = default;
 
   /** Token to format */
   Token Tok;
@@ -34,13 +36,13 @@ struct FormatToken {
   std::vector<FormatLine *> Children;
 
   /** Text of the token whithout trailing whitespaces */
-  StringRef TokenText;
+  std::string_view TokenText;
 
   /** Range of whitespace characters before this token */
   SourceRange WhitespaceRange;
 
   /** The whitespace text before this token. */
-  StringRef WhitespacePrefix;
+  std::string_view WhitespacePrefix;
 
   /** Force a linebreak before this Token */
   bool MustBreakBefore = false;
@@ -66,17 +68,20 @@ struct FormatToken {
   /** Number of columns needed to display this token */
   unsigned ColumnWidth = 0;
 
-  bool isFirstOnLine() const { return Previous == nullptr; }
+  [[nodiscard]] auto isFirstOnLine() const -> bool {
+    return Previous == nullptr;
+  }
 
-  bool is(tok::TokenKind Kind) { return Tok.is(Kind); }
-  bool isNot(tok::TokenKind Kind) { return Tok.isNot(Kind); }
-  template <typename... T> bool isNot(tok::TokenKind K1, T... K) {
+  [[nodiscard]] auto is(TokenKind Kind) -> bool { return Tok.is(Kind); }
+  template <typename... T>
+  [[nodiscard]] auto isNot(TokenKind K1, T... K) -> bool {
     return Tok.isNot(K1, K...);
   };
-  template <typename... Ts> bool isAny(Ts... Args) {
+
+  [[nodiscard]] auto isNot(TokenKind Kind) -> bool { return Tok.isNot(Kind); }
+  template <typename... Ts>[[nodiscard]] auto isAny(Ts... Args) -> bool {
     return Tok.isAny(Args...);
   }
 };
-} // namespace format
-} // namespace vc
+}  // namespace vc::format
 #endif

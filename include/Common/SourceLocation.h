@@ -25,6 +25,8 @@ class SourceLocation {
   uint32_t ID = 0;
 
 public:
+  SourceLocation() = default;
+  
   bool isValid() { return ID != 0; }
   bool isInvalid() { return ID == 0; }
 

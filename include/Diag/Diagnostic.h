@@ -1,10 +1,12 @@
 #ifndef VC_DIAG_DIAGNOSTIC_H
 #define VC_DIAG_DIAGNOSTIC_H
 
-#include "Common/SourceLocation.h"
-#include "Common/StringRef.h"
-
+#include <cassert>
+#include <string_view>
 #include <vector>
+
+#include "Common/SourceLocation.h"
+
 
 namespace vc {
 enum class DiagID : uint32_t;
@@ -16,15 +18,15 @@ enum class DiagnosticArgumentKind { String };
 class DiagnosticArgument {
   DiagnosticArgumentKind Kind;
   union {
-    StringRef S;
+    std::string_view S;
   };
 
 public:
-  DiagnosticArgument(StringRef S)
+  DiagnosticArgument(std::string_view S)
       : Kind(DiagnosticArgumentKind::String), S(S) {}
 
   DiagnosticArgumentKind getKind() const { return Kind; }
-  StringRef getAsString() const {
+  std::string_view getAsString() const {
     assert(Kind == DiagnosticArgumentKind::String);
     return S;
   }

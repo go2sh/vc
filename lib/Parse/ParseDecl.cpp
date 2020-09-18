@@ -8,14 +8,14 @@
 using namespace vc;
 
 Decl *Parser::parseSubtypeDecl() {
-  consumeToken(tok::kw_subtype);
-  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+  consumeToken(TokenKind::kw_subtype);
+  if (Tok.isNot(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
     D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
-  if (Tok.isNot(tok::kw_is)) {
+  if (Tok.isNot(TokenKind::kw_is)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword);
     D.setLocation(Tok.getLocation());
   }
@@ -23,7 +23,7 @@ Decl *Parser::parseSubtypeDecl() {
 
   parseSubtypeIndication();
 
-  if (Tok.isNot(tok::semicolon)) {
+  if (Tok.isNot(TokenKind::semicolon)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
     D.setLocation(Tok.getLocation());
   }
@@ -32,40 +32,40 @@ Decl *Parser::parseSubtypeDecl() {
 }
 
 Decl *Parser::parseTypeDecl() {
-  consumeToken(tok::kw_type);
-  if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+  consumeToken(TokenKind::kw_type);
+  if (Tok.isNot(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
     D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
-  if (Tok.is(tok::semicolon)) {
+  if (Tok.is(TokenKind::semicolon)) {
     // incomplete type
     return nullptr;
   }
 
-  if (Tok.isNot(tok::kw_is)) {
+  if (Tok.isNot(TokenKind::kw_is)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_keyword);
     D.setLocation(Tok.getLocation());
   }
   consumeToken();
 
   switch (Tok.getKind()) {
-  case tok::left_parenthesis:
+  case TokenKind::left_parenthesis:
     parseEnumTypeDef();
     break;
-  case tok::kw_range:
+  case TokenKind::kw_range:
     parseRangeTypeDef();
     break;
-  case tok::kw_array:
+  case TokenKind::kw_array:
     parseArrayTypeDef();
     break;
-  case tok::kw_record:
+  case TokenKind::kw_record:
     parseRecordTypeDef();
     break;
   }
 
-  if (Tok.isNot(tok::semicolon)) {
+  if (Tok.isNot(TokenKind::semicolon)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
     D.setLocation(Tok.getLocation());
   }
@@ -76,17 +76,17 @@ Decl *Parser::parseTypeDecl() {
 
 Decl *Parser::parseSignalDecl(bool Interface) {
   //
-  consumeIf(tok::kw_signal);
+  consumeIf(TokenKind::kw_signal);
 
   do {
-    if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+    if (Tok.isNot(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
       DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
       D.setLocation(Tok.getLocation());
     }
     consumeToken();
-  } while (consumeIf(tok::comma));
+  } while (consumeIf(TokenKind::comma));
 
-  if (Tok.isNot(tok::colon)) {
+  if (Tok.isNot(TokenKind::colon)) {
     DiagnosticBuilder D = Diag->diagnose(diag::expected_colon);
     D.setLocation(Tok.getLocation());
   }
@@ -94,12 +94,12 @@ Decl *Parser::parseSignalDecl(bool Interface) {
 
   parseSubtypeIndication();
 
-  if (consumeIf(tok::variable_assignment)) {
+  if (consumeIf(TokenKind::variable_assignment)) {
     parseExpr();
   }
 
   if (!Interface) {
-    if (Tok.isNot(tok::semicolon)) {
+    if (Tok.isNot(TokenKind::semicolon)) {
       DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
       D.setLocation(Tok.getLocation());
       return nullptr;

@@ -2,40 +2,40 @@
 
 using namespace vc;
 
-prec::Level vc::getBinaryOperatorPrecedence(tok::TokenKind Kind) {
+prec::Level vc::getBinaryOperatorPrecedence(TokenKind Kind) {
   switch(Kind) {
-    case tok::condition_conversion:
+    case TokenKind::condition_conversion:
       return prec::Condition;
-    case tok::equal:
-    case tok::inequal:
-    case tok::greater:
-    case tok::greater_equal:
-    case tok::less:
-    case tok::less_equal:
-    case tok::matching_equal:
-    case tok::matching_inequal:
-    case tok::matching_greater:
-    case tok::matching_greater_equal:
-    case tok::matching_less:
-    case tok::matching_less_equal:
+    case TokenKind::equal:
+    case TokenKind::inequal:
+    case TokenKind::greater:
+    case TokenKind::greater_equal:
+    case TokenKind::less:
+    case TokenKind::less_equal:
+    case TokenKind::matching_equal:
+    case TokenKind::matching_inequal:
+    case TokenKind::matching_greater:
+    case TokenKind::matching_greater_equal:
+    case TokenKind::matching_less:
+    case TokenKind::matching_less_equal:
       return prec::Condition;
-    case tok::kw_sll:
-    case tok::kw_srl:
-    case tok::kw_sla:
-    case tok::kw_sra:
-    case tok::kw_rol:
-    case tok::kw_ror:
+    case TokenKind::kw_sll:
+    case TokenKind::kw_srl:
+    case TokenKind::kw_sla:
+    case TokenKind::kw_sra:
+    case TokenKind::kw_rol:
+    case TokenKind::kw_ror:
       return prec::Shift;
-    case tok::plus:
-    case tok::minus:
-    case tok::ampersand:
+    case TokenKind::plus:
+    case TokenKind::minus:
+    case TokenKind::ampersand:
       return prec::Adding;
-    case tok::asterisk:
-    case tok::slash:
-    case tok::kw_mod:
-    case tok::kw_rem:
+    case TokenKind::asterisk:
+    case TokenKind::slash:
+    case TokenKind::kw_mod:
+    case TokenKind::kw_rem:
       return prec::Multiplying;
-    case tok::double_star:
+    case TokenKind::double_star:
       return prec::Miscellaneous;
     default:
       return prec::Unknown;

@@ -7,13 +7,13 @@
 using namespace vc;
 
 bool Parser::parseDesignFile() {
-  if (Tok.is(tok::NUM_TOKENS))
+  if (Tok.is(TokenKind::NUM_TOKENS))
     consumeToken();
 
   bool hasDesignUnit = false;
   do {
     hasDesignUnit = parseDesignUnit();
-  } while (Tok.isNot(tok::eof));
+  } while (Tok.isNot(TokenKind::eof));
 
   return hasDesignUnit;
 }
@@ -29,13 +29,13 @@ void Parser::parseContextClause() {
 
   while (true) {
     switch (Tok.getKind()) {
-    case tok::kw_library:
+    case TokenKind::kw_library:
       parseLibraryClause();
       break;
-    case tok::kw_use:
+    case TokenKind::kw_use:
       parseUseClause();
       break;
-    case tok::kw_context:
+    case TokenKind::kw_context:
       if (!parseContextReference()) {
         L->restoreToken(CurrentTok);
         consumeToken();
@@ -49,17 +49,17 @@ void Parser::parseContextClause() {
 }
 
 void Parser::parseLibraryClause() {
-  consumeToken(tok::kw_library);
+  consumeToken(TokenKind::kw_library);
 
   while (true) {
-    if (Tok.isNot(tok::basic_identifier, tok::extended_identifier)) {
+    if (Tok.isNot(TokenKind::basic_identifier, TokenKind::extended_identifier)) {
       DiagnosticBuilder D = Diag->diagnose(diag::expected_identifier);
       D.setLocation(Tok.getLocation());
     }
     consumeToken();
-    if (consumeIf(tok::semicolon)) {
+    if (consumeIf(TokenKind::semicolon)) {
       break;
-    } else if(consumeIf(tok::comma)) {
+    } else if(consumeIf(TokenKind::comma)) {
       continue;
     } else {
       //std::cout << "Expected comma or semicolon";
@@ -70,18 +70,18 @@ void Parser::parseLibraryClause() {
 }
 
 void Parser::parseUseClause() {
-  consumeToken(tok::kw_use);
+  consumeToken(TokenKind::kw_use);
   
   do {
     parseName();
-  } while (consumeIf(tok::comma));
+  } while (consumeIf(TokenKind::comma));
 
-  if (Tok.isNot(tok::semicolon)) {
+  if (Tok.isNot(TokenKind::semicolon)) {
       DiagnosticBuilder D = Diag->diagnose(diag::expected_semicolon);
       D.setLocation(Tok.getLocation());
     return;
   }
-  consumeToken(tok::semicolon);
+  consumeToken(TokenKind::semicolon);
 }
 
 bool Parser::parseContextReference() { return true; }

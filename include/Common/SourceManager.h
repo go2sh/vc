@@ -1,9 +1,10 @@
 #ifndef VC_BASIC_SOURCE_MANAGER_H
 #define VC_BASIC_SOURCE_MANAGER_H
+#include <cassert>
+#include <vector>
 
 #include "Common/MemoryBuffer.h"
 #include "Common/SourceLocation.h"
-#include <vector>
 
 namespace vc {
 namespace Detail {
@@ -18,7 +19,7 @@ public:
   virtual ~ContentCache();
 
   MemoryBuffer *getBuffer();
-  std::string getPath() { return Buffer->getIdentifier(); }
+  std::string getPath() { return Path; }
 
   void replaceBuffer(MemoryBuffer *NewBuffer) {
     // We own the buffer so delete it, when exchagened

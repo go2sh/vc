@@ -9,34 +9,34 @@ using namespace vc;
 Expr *Parser::parsePrimaryExpr() {
   Expr *R = new Expr(ExprKind::AnyExpr);
   switch (Tok.getKind()) {
-  case tok::basic_identifier:
-  case tok::extended_identifier:
+  case TokenKind::basic_identifier:
+  case TokenKind::extended_identifier:
     R = parseName();
     break;
-  case tok::string_literal:
+  case TokenKind::string_literal:
     consumeToken();
     break;
-  case tok::character_literal:
+  case TokenKind::character_literal:
     consumeToken();
     break;
-  case tok::based_literal:
+  case TokenKind::based_literal:
     consumeToken();
     break;
-  case tok::decimal_literal:
+  case TokenKind::decimal_literal:
     consumeToken();
     break;
-  case tok::bit_string_literal:
-    consumeToken();
-    break;
-
-  case tok::kw_new:
+  case TokenKind::bit_string_literal:
     consumeToken();
     break;
 
-  case tok::left_parenthesis:
+  case TokenKind::kw_new:
+    consumeToken();
+    break;
+
+  case TokenKind::left_parenthesis:
     consumeToken();
     R = parseExpr();
-    if (Tok.isNot(tok::right_parenthesis)) {
+    if (Tok.isNot(TokenKind::right_parenthesis)) {
       DiagnosticBuilder D = Diag->diagnose(diag::expected_right_parenthesis);
       D.setLocation(Tok.getLocation());
     }
@@ -53,14 +53,14 @@ Expr *Parser::parseFactorExpr() {
   Expr *Expr, *LHS, *RHS;
 
   switch (Tok.getKind()) {
-  case tok::kw_abs:
-  case tok::kw_not:
-  case tok::kw_and:
-  case tok::kw_or:
-  case tok::kw_nand:
-  case tok::kw_nor:
-  case tok::kw_xor:
-  case tok::kw_xnor:
+  case TokenKind::kw_abs:
+  case TokenKind::kw_not:
+  case TokenKind::kw_and:
+  case TokenKind::kw_or:
+  case TokenKind::kw_nand:
+  case TokenKind::kw_nor:
+  case TokenKind::kw_xor:
+  case TokenKind::kw_xnor:
     // TODO: Operator type
     consumeToken();
     break;
@@ -70,7 +70,7 @@ Expr *Parser::parseFactorExpr() {
   if (false) {
 
   } else {
-    if (Tok.is(tok::double_star)) {
+    if (Tok.is(TokenKind::double_star)) {
       consumeToken();
       RHS = parsePrimaryExpr();
     } else {
@@ -83,13 +83,13 @@ Expr *Parser::parseFactorExpr() {
 
 Expr *Parser::parseTermExpr() {
   Expr *LHS, *RHS, *R = new Expr(ExprKind::AnyExpr);
-  bool hasSign = consumeIf(tok::asterisk) | consumeIf(tok::slash) |
-                 consumeIf(tok::kw_mod) | consumeIf(tok::kw_rem);
+  bool hasSign = consumeIf(TokenKind::asterisk) | consumeIf(TokenKind::slash) |
+                 consumeIf(TokenKind::kw_mod) | consumeIf(TokenKind::kw_rem);
 
   LHS = parseFactorExpr();
 
   // TODO: loop
-  if (Tok.isAny(tok::asterisk, tok::slash, tok::kw_mod, tok::kw_rem)) {
+  if (Tok.isAny(TokenKind::asterisk, TokenKind::slash, TokenKind::kw_mod, TokenKind::kw_rem)) {
     consumeToken();
     RHS = parseFactorExpr();
   } else {
@@ -102,12 +102,12 @@ Expr *Parser::parseTermExpr() {
 Expr *Parser::parseSimpleExpr() {
   Expr *LHS, *RHS, *R = new Expr(ExprKind::DeclRefExpr);
   bool hasSign =
-      consumeIf(tok::plus) | consumeIf(tok::minus) | consumeIf(tok::ampersand);
+      consumeIf(TokenKind::plus) | consumeIf(TokenKind::minus) | consumeIf(TokenKind::ampersand);
 
   LHS = parseTermExpr();
 
   // TODO: loop
-  if (Tok.isAny(tok::plus, tok::minus, tok::ampersand)) {
+  if (Tok.isAny(TokenKind::plus, TokenKind::minus, TokenKind::ampersand)) {
     consumeToken();
     RHS = parseTermExpr();
   } else {
@@ -123,12 +123,12 @@ Expr *Parser::parseShiftExpr() {
   LHS = parseSimpleExpr();
 
   switch (Tok.getKind()) {
-  case tok::kw_sla:
-  case tok::kw_sll:
-  case tok::kw_sra:
-  case tok::kw_srl:
-  case tok::kw_rol:
-  case tok::kw_ror:
+  case TokenKind::kw_sla:
+  case TokenKind::kw_sll:
+  case TokenKind::kw_sra:
+  case TokenKind::kw_srl:
+  case TokenKind::kw_rol:
+  case TokenKind::kw_ror:
     consumeToken();
     RHS = parseSimpleExpr();
   default:
@@ -143,18 +143,18 @@ Expr *Parser::parseRelationExpr() {
   LHS = parseShiftExpr();
 
   switch (Tok.getKind()) {
-  case tok::equal:
-  case tok::inequal:
-  case tok::greater_equal:
-  case tok::greater:
-  case tok::less_equal:
-  case tok::less:
-  case tok::matching_equal:
-  case tok::matching_inequal:
-  case tok::matching_greater_equal:
-  case tok::matching_greater:
-  case tok::matching_less_equal:
-  case tok::matching_less:
+  case TokenKind::equal:
+  case TokenKind::inequal:
+  case TokenKind::greater_equal:
+  case TokenKind::greater:
+  case TokenKind::less_equal:
+  case TokenKind::less:
+  case TokenKind::matching_equal:
+  case TokenKind::matching_inequal:
+  case TokenKind::matching_greater_equal:
+  case TokenKind::matching_greater:
+  case TokenKind::matching_less_equal:
+  case TokenKind::matching_less:
     consumeToken();
     RHS = parseShiftExpr();
   default:
@@ -169,12 +169,12 @@ Expr *Parser::parseLogicalExpr() {
   LHS = parseRelationExpr();
 
   switch (Tok.getKind()) {
-  case tok::kw_and:
-  case tok::kw_or:
-  case tok::kw_nand:
-  case tok::kw_nor:
-  case tok::kw_xor:
-  case tok::kw_xnor:
+  case TokenKind::kw_and:
+  case TokenKind::kw_or:
+  case TokenKind::kw_nand:
+  case TokenKind::kw_nor:
+  case TokenKind::kw_xor:
+  case TokenKind::kw_xnor:
     consumeToken();
     RHS = parseRelationExpr();
     break;
@@ -187,7 +187,7 @@ Expr *Parser::parseLogicalExpr() {
 Expr *Parser::parseExpr() {
   Expr *LHS, *R = new Expr(ExprKind::AnyExpr);
 
-  if (Tok.is(tok::condition_conversion)) {
+  if (Tok.is(TokenKind::condition_conversion)) {
     consumeToken();
     LHS = parseLogicalExpr();
   } else {

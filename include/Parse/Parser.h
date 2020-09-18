@@ -1,16 +1,16 @@
 #ifndef VC_PARSER_H
 #define VC_PARSER_H
 
+#include <cassert>
+
 #include "AST/Decl.h"
 #include "AST/Expr.h"
 #include "AST/Identifier.h"
 #include "AST/Stmt.h"
 #include "AST/Type.h"
-#include "Common/TokenKinds.h"
 #include "Diag/DiagnosticEngine.h"
-#include "Parse/Lexer.h"
 #include "Parse/Token.h"
-#include <cassert>
+#include "Parse/Lexer.h"
 
 namespace vc {
 class Parser {
@@ -23,23 +23,23 @@ public:
 
 public:
   void consumeToken() {
-    assert(Tok.isNot(tok::eof) && "Lexing past eof!");
+    assert(Tok.isNot(TokenKind::eof) && "Lexing past eof!");
     L->lex(Tok);
   }
 
-  void consumeToken(tok::TokenKind K) {
+  void consumeToken(TokenKind K) {
     assert(Tok.is(K) && "Consuming wrong token kind");
     return consumeToken();
   }
 
-  bool consumeIf(tok::TokenKind K) {
+  bool consumeIf(TokenKind K) {
     if (Tok.isNot(K))
       return false;
     consumeToken(K);
     return true;
   }
 
-  template <typename... T> bool consumeIf(tok::TokenKind K1, T... K) {
+  template <typename... T> bool consumeIf(TokenKind K1, T... K) {
     if (!Tok.isAny(K1, K...))
       return false;
     consumeToken();

@@ -1,14 +1,17 @@
 #include "FormatTokenLexer.h"
 using namespace vc::format;
 
-// void FormatTokenLexer::reset() {
-
-// }
+FormatTokenLexer::~FormatTokenLexer() {
+  for (auto *Token : Tokens) {
+    delete Token;
+  }
+  Tokens.clear();
+}
 
 void FormatTokenLexer::lex() {
   do {
     Tokens.push_back(getFormatToken());
-  } while (Tokens.back()->Tok.isNot(tok::eof));
+  } while (Tokens.back()->Tok.isNot(TokenKind::eof));
 }
 
 auto FormatTokenLexer::getFormatToken() -> FormatToken * {
@@ -20,8 +23,8 @@ auto FormatTokenLexer::getFormatToken() -> FormatToken * {
   unsigned WhitespaceLength = 0;
   TrailingWhitespaces = 0;
 
-  while (FT->Tok.is(tok::unknown)) {
-    StringRef TokenText = FT->Tok.getValue();
+  while (FT->Tok.is(TokenKind::unknown)) {
+    std::string_view TokenText = FT->Tok.getValue();
     for (const char C : TokenText) {
       switch (C) {
       case '\n':
@@ -50,8 +53,8 @@ auto FormatTokenLexer::getFormatToken() -> FormatToken * {
   }
 
   FT->TokenText = FT->Tok.getValue();
-  FT->WhitespacePrefix = 
-      StringRef(FT->Tok.getValue().data() - WhitespaceLength, WhitespaceLength);
+  FT->WhitespacePrefix = std::string_view(
+      FT->Tok.getValue().data() - WhitespaceLength, WhitespaceLength);
   FT->WhitespaceRange = SourceRange(
       WhitespaceStart, WhitespaceStart.getLocWithOffset(WhitespaceLength));
 
@@ -59,10 +62,12 @@ auto FormatTokenLexer::getFormatToken() -> FormatToken * {
   FT->ColumnWidth = FT->TokenText.length();
   Column += FT->ColumnWidth;
 
-  if (FT->Tok.is(tok::comment)) {
-    StringRef UntrimmedText = FT->TokenText;
-    FT->TokenText = UntrimmedText.rtrim(" \xA0\t\f\v");
+  if (FT->Tok.is(TokenKind::comment)) {
+    std::string_view UntrimmedText = FT->TokenText;
+    UntrimmedText.remove_suffix(std::min(
+        UntrimmedText.find_last_not_of(" \xA0\t\f\v"), UntrimmedText.size()));
     TrailingWhitespaces += UntrimmedText.size() - FT->TokenText.size();
+    FT->TokenText = UntrimmedText;
   }
 
   return FT;

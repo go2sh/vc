@@ -5,6 +5,7 @@
 #include <iterator>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include <filesystem>
@@ -44,7 +45,7 @@ void MemoryBuffer::init(const char *Start, const char *End) {
 
 std::unique_ptr<DefaultMemoryBuffer>
 DefaultMemoryBuffer::createMemoryBuffer(std::size_t Size,
-                                        const std::string &Identifier) {
+                                        std::string_view Identifier) {
   std::size_t MemSize =
       sizeof(DefaultMemoryBuffer) + Identifier.size() + 1 + Size + 1;
   char *Mem = static_cast<char *>(operator new(MemSize));
@@ -65,7 +66,7 @@ DefaultMemoryBuffer::createMemoryBuffer(std::size_t Size,
 }
 
 std::unique_ptr<MemoryBuffer>
-MemoryBuffer::getMemoryBuffer(StringRef Data, const std::string &Filename) {
+MemoryBuffer::getMemoryBuffer(std::string_view Data, std::string_view Filename) {
   auto MemBuf = DefaultMemoryBuffer::createMemoryBuffer(0, Filename);
   MemBuf->init(Data.data(), Data.data() + Data.size());
 

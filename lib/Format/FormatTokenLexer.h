@@ -1,11 +1,11 @@
 #ifndef VC_FORMAT_FORMATTOKEN_LEXER_H
 #define VC_FORMAT_FORMATTOKEN_LEXER_H
 
+#include <vector>
+
 #include <Common/SourceManager.h>
 #include <Format/Format.h>
 #include <Parse/Lexer.h>
-
-#include <vector>
 
 #include "FormatToken.h"
 
@@ -16,7 +16,7 @@ class FormatTokenLexer {
   unsigned Column = 0;
   const FormatStyle &Style;
 
-  std::vector<FormatToken*> Tokens;
+  std::vector<FormatToken *> Tokens;
 
 public:
   FormatTokenLexer(const SourceManager &SManager, SourceFile SFile,
@@ -26,15 +26,14 @@ public:
     L.setKeepWhitespaces(true);
     L.setKeepComments(true);
   }
+  ~FormatTokenLexer();
 
   void lex();
 
-  auto getTokens() -> std::vector<FormatToken*> & {
-    return Tokens;
-  }
+  auto getTokens() -> std::vector<FormatToken *> & { return Tokens; }
 
 private:
   auto getFormatToken() -> FormatToken *;
 };
-}  // namespace vc::format
+} // namespace vc::format
 #endif

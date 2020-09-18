@@ -7,48 +7,48 @@ using namespace vc;
 Expr *Parser::parseSensitivityList() {
   do {
     Expr *E = parseName();
-  } while (consumeIf(tok::comma));
+  } while (consumeIf(TokenKind::comma));
   return nullptr;
 }
 
 Stmt *Parser::parseProcessStmt(Identifier *Label, bool Postponed) {
-  consumeToken(tok::kw_process);
+  consumeToken(TokenKind::kw_process);
 
-  if (consumeIf(tok::left_parenthesis)) {
-    if (consumeIf(tok::kw_all)) {
+  if (consumeIf(TokenKind::left_parenthesis)) {
+    if (consumeIf(TokenKind::kw_all)) {
       // Handle all
     } else {
       parseSensitivityList();
     }
-    if (Tok.isNot(tok::right_parenthesis)) {
+    if (Tok.isNot(TokenKind::right_parenthesis)) {
     }
     consumeToken();
-    consumeIf(tok::kw_is);
+    consumeIf(TokenKind::kw_is);
 
     parseProcessDeclPart();
 
-    if (Tok.isNot(tok::kw_begin)) {
+    if (Tok.isNot(TokenKind::kw_begin)) {
     }
     consumeToken();
 
     parseProcessStmtPart();
 
-    if (Tok.isNot(tok::kw_end)) {
+    if (Tok.isNot(TokenKind::kw_end)) {
     }
     consumeToken();
 
-    if (consumeIf(tok::kw_postponed) && !Postponed) {
+    if (consumeIf(TokenKind::kw_postponed) && !Postponed) {
     }
 
-    if (Tok.isNot(tok::kw_process)) {
+    if (Tok.isNot(TokenKind::kw_process)) {
     }
-    consumeToken(tok::kw_process);
+    consumeToken(TokenKind::kw_process);
 
-    consumeIf(tok::basic_identifier, tok::extended_identifier);
+    consumeIf(TokenKind::basic_identifier, TokenKind::extended_identifier);
 
-    if (Tok.isNot(tok::semicolon)) {
+    if (Tok.isNot(TokenKind::semicolon)) {
     }
-    consumeToken(tok::semicolon);
+    consumeToken(TokenKind::semicolon);
   }
   return nullptr;
 }
@@ -65,21 +65,21 @@ void Parser::parseProcessStmtPart() {}
 void Parser::parseWaveform() {
   Expr *R, *T;
 
-  if (Tok.is(tok::kw_unaffected)) {
+  if (Tok.is(TokenKind::kw_unaffected)) {
     return;
   }
 
   do {
-    if (consumeIf(tok::kw_null)) {
+    if (consumeIf(TokenKind::kw_null)) {
 
     } else {
       R = parseExpr();
     }
 
-    if (consumeIf(tok::kw_after)) {
+    if (consumeIf(TokenKind::kw_after)) {
       T = parseExpr();
     }
-  } while (consumeIf(tok::comma));
+  } while (consumeIf(TokenKind::comma));
 }
 
 // 9.3.3.1
@@ -91,12 +91,12 @@ void Parser::parseWaveform() {
 //          | element_simple_name
 //          | others
 void Parser::parseAggregate() {
-  consumeToken(tok::left_parenthesis);
+  consumeToken(TokenKind::left_parenthesis);
 
   do {
-    if (Tok.is(tok::kw_others)) {
+    if (Tok.is(TokenKind::kw_others)) {
       consumeToken();
-    } else if (Tok.is(tok::left_parenthesis)) {
+    } else if (Tok.is(TokenKind::left_parenthesis)) {
       parseSubtypeIndication();
     } else {
       parseSimpleExpr();
@@ -119,7 +119,7 @@ void Parser::parseAggregate() {
 // target ::= name
 //          | aggregate
 void Parser::parseSimpleSignalAssignment() {
-  if (Tok.is(tok::left_parenthesis)) {
+  if (Tok.is(TokenKind::left_parenthesis)) {
     parseAggregate();
   } else {
     parseName();

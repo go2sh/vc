@@ -1,7 +1,7 @@
 #ifndef VC_COMMON_OPERATOR_PRECEDENCE_H
 #define VC_COMMON_OPERATOR_PRECEDENCE_H
 
-#include "Common/TokenKinds.h"
+#include "Parse/TokenKinds.h"
 
 namespace vc {
 namespace prec {
@@ -18,7 +18,7 @@ enum Level {
 };
 }
 
-prec::Level getBinaryOperatorPrecedence(tok::TokenKind Kind);
+prec::Level getBinaryOperatorPrecedence(TokenKind Kind);
 } // namespace vc
 
 #endif // !VC_COMMON_OPERATOR_PRECEDENCE_H

@@ -4,23 +4,23 @@
 using namespace vc;
 
 Detail::ContentCache::~ContentCache() {
-  if (Buffer) {
-    delete Buffer;
-  }
+  delete Buffer;
 }
 
 MemoryBuffer *Detail::ContentCache::getBuffer() {
-  if (Buffer) {
+  if (Buffer != nullptr) {
     return Buffer;
-  } else {
-    auto Buf = MemoryBuffer::getFile(Path);
-    replaceBuffer(Buf.release());
   }
+  
+  auto Buf = MemoryBuffer::getFile(Path);
+  replaceBuffer(Buf.release());
+
   return Buffer;
 }
 
 SourceFile SourceManager::createSourceFile(std::unique_ptr<MemoryBuffer> Buffer) {
   Detail::ContentCache *Entry = new Detail::ContentCache();
+
   Entry->replaceBuffer(Buffer.release());
   FileCache.push_back(Entry);
   LocationCache.push_back(SourceLocation::fromRawEncoding(LastSourceLocation + 1));
@@ -31,6 +31,7 @@ SourceFile SourceManager::createSourceFile(std::unique_ptr<MemoryBuffer> Buffer)
 
 SourceFile SourceManager::createSourceFile(const std::string &Path) {
   Detail::ContentCache *Entry = new Detail::ContentCache(Path);
+  
   FileCache.push_back(Entry);
   LocationCache.push_back(SourceLocation::fromRawEncoding(LastSourceLocation + 1));
   LastSourceLocation += Entry->getBuffer()->getSize();
